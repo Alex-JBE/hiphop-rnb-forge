@@ -1,30 +1,28 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import CoverPanel from "@/components/CoverPanel";
 import VideoPanel from "@/components/VideoPanel";
 import Header from "@/components/Header";
 import ResultPanel from "@/components/ResultPanel";
 import DraftsPanel from "@/components/DraftsPanel";
 import { useDrafts } from "@/lib/useDrafts";
-import { exportTXT, exportPDF } from "@/lib/export";
+import { exportTXT } from "@/lib/export";
 
-// ─── Style Categories ─────────────────────────────────────────────────────────
+// ─── Data ──────────────────────────────────────────────────────────────────────
 
 const STYLE_CATEGORIES = [
-  { label: "Classic Hip-Hop", variant: "purple" as const, styles: ["Boom Bap", "Jazz Rap", "East Coast", "Golden Era", "Hardcore Hip-Hop"] },
-  { label: "Trap & Drill",    variant: "dark"   as const, styles: ["Trap", "Dark Trap", "Melodic Trap", "Drill", "UK Drill"] },
-  { label: "R&B",             variant: "purple" as const, styles: ["Contemporary R&B", "90s R&B", "New Jack Swing", "Neo-Soul", "Alt-R&B"] },
-  { label: "Conscious & Alt", variant: "dark"   as const, styles: ["Conscious Rap", "Alternative Hip-Hop", "Emo Rap", "Lo-Fi Hip-Hop", "Spoken Word"] },
-  { label: "Club & Party",    variant: "purple" as const, styles: ["Crunk", "Bounce", "Hyphy", "Jersey Club", "Twerk"] },
-  { label: "Experimental",    variant: "dark"   as const, styles: ["Cloud Rap", "Phonk", "Glitch Hop", "Vaporwave Hip-Hop", "Noise Rap"] },
-  { label: "Southern",        variant: "purple" as const, styles: ["G-Funk", "West Coast", "Dirty South", "Memphis Rap", "Chopped & Screwed"] },
-  { label: "Gospel & Soul",   variant: "dark"   as const, styles: ["Gospel Rap", "Soul Rap", "Trap Soul", "Inspirational", "Neo-Gospel"] },
-  { label: "Latin & Caribbean", variant: "purple" as const, styles: ["Latin Trap", "Reggaeton Hip-Hop", "Dancehall Rap", "Afrobeats Rap", "Amapiano"] },
-  { label: "Hybrid & Cross",  variant: "dark"   as const, styles: ["Pop Rap", "Rap Rock", "Country Rap", "K-Hip-Hop", "Grime"] },
+  { id: "classic",     label: "Classic",      variant: "purple" as const, subs: ["Boom Bap", "Jazz Rap", "East Coast", "Golden Era", "Hardcore Hip-Hop"] },
+  { id: "trap",        label: "Trap & Drill",  variant: "amber"  as const, subs: ["Trap", "Dark Trap", "Melodic Trap", "Drill", "UK Drill"] },
+  { id: "rnb",         label: "R&B",           variant: "purple" as const, subs: ["Contemporary R&B", "Neo-Soul", "Alt-R&B", "90s R&B", "New Jack Swing"] },
+  { id: "conscious",   label: "Conscious",     variant: "amber"  as const, subs: ["Conscious Rap", "Alt Hip-Hop", "Emo Rap", "Lo-Fi Hip-Hop", "Spoken Word"] },
+  { id: "club",        label: "Club & Party",  variant: "purple" as const, subs: ["Crunk", "Bounce", "Hyphy", "Jersey Club", "Twerk"] },
+  { id: "experimental",label: "Experimental",  variant: "amber"  as const, subs: ["Cloud Rap", "Phonk", "Glitch Hop", "Noise Rap", "Vaporwave Hip-Hop"] },
+  { id: "southern",    label: "Southern",      variant: "purple" as const, subs: ["G-Funk", "West Coast", "Dirty South", "Memphis Rap", "Chopped & Screwed"] },
+  { id: "soul",        label: "Gospel & Soul", variant: "amber"  as const, subs: ["Gospel Rap", "Soul Rap", "Trap Soul", "Inspirational", "Neo-Gospel"] },
+  { id: "latin",       label: "Latin & World", variant: "purple" as const, subs: ["Latin Trap", "Reggaeton Hip-Hop", "Afrobeats Rap", "Amapiano", "Dancehall Rap"] },
+  { id: "hybrid",      label: "Hybrid",        variant: "amber"  as const, subs: ["Pop Rap", "Rap Rock", "Country Rap", "K-Hip-Hop", "Grime"] },
 ];
-
-// ─── Instruments ──────────────────────────────────────────────────────────────
 
 const INSTRUMENTS = [
   "808 Bass", "Trap Kick", "Live Drums", "Hi-Hats", "Piano",
@@ -33,473 +31,594 @@ const INSTRUMENTS = [
 ];
 
 const EXOTIC_INSTRUMENTS = [
-  "Steel Drum", "Koto", "Oud", "Sitar", "Tabla",
-  "Djembe", "Kalimba", "Marimba", "Balafon", "Pandeiro",
-  "Mbira", "Kora", "Duduk", "Bansuri", "Gamelan", "Shamisen",
+  "Steel Drum", "Koto", "Oud", "Sitar", "Tabla", "Djembe",
+  "Kalimba", "Marimba", "Balafon", "Pandeiro", "Mbira", "Kora",
+  "Duduk", "Bansuri", "Gamelan", "Shamisen",
 ];
-
-// ─── Languages ────────────────────────────────────────────────────────────────
 
 const LANGUAGES = [
-  "English","Spanish","French","Portuguese","German","Italian","Russian",
-  "Japanese","Korean","Chinese (Mandarin)","Chinese (Cantonese)","Arabic",
-  "Hindi","Swahili","Yoruba","Amharic","Turkish","Persian","Polish","Dutch",
-  "Swedish","Norwegian","Danish","Finnish","Greek","Hebrew","Romanian",
-  "Hungarian","Czech","Ukrainian","Vietnamese","Thai","Indonesian","Malay",
-  "Tagalog","Bengali","Urdu","Tamil","Telugu","Punjabi",
+  "English","Russian","Spanish","French","Portuguese","German","Italian",
+  "Japanese","Korean","Arabic","Hindi","Chinese","Turkish","Hebrew",
+  "Dutch","Swedish","Polish","Czech","Ukrainian","Greek","Romanian",
+  "Swahili","Yoruba","Amharic","Vietnamese","Indonesian","Bengali","Punjabi",
 ];
 
-// ─── Presets ──────────────────────────────────────────────────────────────────
-
-const MOOD_PRESETS = [
-  { label: "Night",  icon: "🌃", style: "Trap Soul",      key: "F minor",  tempo: "Mid-Tempo Flow (85–100 BPM)", mood: "atmospheric, cinematic, late-night", theme: "city lights, solitude, reflection" },
-  { label: "Summer", icon: "☀️", style: "West Coast",     key: "G major",  tempo: "Cruising Tempo (95–110 BPM)", mood: "sunny, energetic, carefree",         theme: "beaches, good times, freedom" },
-  { label: "Sad",    icon: "💔", style: "Emo Rap",        key: "A minor",  tempo: "Slow Jam (65–75 BPM)",        mood: "melancholic, vulnerable, heartbroken", theme: "heartbreak, loss, loneliness" },
-  { label: "Flex",   icon: "💪", style: "Trap",           key: "C minor",  tempo: "Trap Bounce (130–145 BPM)",   mood: "confident, hard-hitting, triumphant", theme: "success, hustle, rise from nothing" },
-  { label: "Chill",  icon: "🌀", style: "Lo-Fi Hip-Hop",  key: "Bb major", tempo: "Lo-Fi Drift (60–80 BPM)",     mood: "relaxed, introspective, cozy",       theme: "rainy days, studying, nostalgia" },
-  { label: "Club",   icon: "🔥", style: "Jersey Club",    key: "D minor",  tempo: "Drill Pace (140–160 BPM)",    mood: "energetic, euphoric, aggressive",    theme: "nightclub, dancing, energy" },
+const KEYS = [
+  "A minor","D minor","F major","G minor","C major",
+  "Bb major","E minor","Ab major","F minor","C minor","G major","B minor",
 ];
-
-// ─── Keys & Tempos ────────────────────────────────────────────────────────────
-
-const KEYS = ["A minor","D minor","F major","G minor","C major","Bb major","E minor","Ab major","F minor","C minor","G major","B minor"];
 
 const TEMPOS = [
-  { label: "Lo-Fi Drift",      bpm: "60–80 BPM" },
-  { label: "Slow Jam",         bpm: "65–75 BPM" },
-  { label: "Neo-Soul Groove",  bpm: "80–95 BPM" },
-  { label: "Mid-Tempo Flow",   bpm: "85–100 BPM" },
-  { label: "Boom Bap Beat",    bpm: "90–100 BPM" },
-  { label: "Cruising Tempo",   bpm: "95–110 BPM" },
-  { label: "Trap Bounce",      bpm: "130–145 BPM" },
-  { label: "Drill Pace",       bpm: "140–160 BPM" },
+  "Lo-Fi Drift (60–80 BPM)",
+  "Slow Jam (65–75 BPM)",
+  "Neo-Soul Groove (80–95 BPM)",
+  "Mid-Tempo Flow (85–100 BPM)",
+  "Boom Bap Beat (90–100 BPM)",
+  "Cruising Tempo (95–110 BPM)",
+  "Trap Bounce (130–145 BPM)",
+  "Drill Pace (140–160 BPM)",
 ];
 
-const VOCAL_TONES = [
-  "Rapping","Melodic Rap","Sung R&B","Auto-Tune",
-  "Harmonized","Spoken Word","Whispering","Ad-Libs","Choir","Falsetto",
+const INTENSITY_LABELS = ["", "Intimate", "Smooth", "Energetic", "Hard", "Maximum"];
+
+const MOOD_PRESETS = [
+  { icon: "\u{1F303}", label: "Night",  key: "F minor",  tempo: "Mid-Tempo Flow (85–100 BPM)", intensity: 2, styles: ["Trap Soul", "Cloud Rap"] },
+  { icon: "☀️", label: "Summer", key: "G major",  tempo: "Cruising Tempo (95–110 BPM)", intensity: 3, styles: ["West Coast", "G-Funk"] },
+  { icon: "\u{1F494}", label: "Sad",    key: "A minor",  tempo: "Slow Jam (65–75 BPM)", intensity: 2, styles: ["Emo Rap", "Alt-R&B"] },
+  { icon: "\u{1F4AA}", label: "Flex",   key: "C minor",  tempo: "Trap Bounce (130–145 BPM)", intensity: 4, styles: ["Trap", "Drill"] },
+  { icon: "\u{1F300}", label: "Chill",  key: "Bb major", tempo: "Lo-Fi Drift (60–80 BPM)", intensity: 1, styles: ["Lo-Fi Hip-Hop", "Neo-Soul"] },
+  { icon: "\u{1F525}", label: "Club",   key: "D minor",  tempo: "Drill Pace (140–160 BPM)", intensity: 5, styles: ["Jersey Club", "Bounce"] },
 ];
 
-const INTENSITY_LABELS = ["","Intimate","Smooth","Energetic","Hard","Maximum"];
+const VOCAL_STYLES = [
+  "Rapping", "Melodic Rap", "Sung R&B", "Auto-Tune",
+  "Harmonized", "Spoken Word", "Whispering", "Ad-Libs", "Choir", "Falsetto",
+];
 
-// ─── Pill helper ──────────────────────────────────────────────────────────────
+type TrackMode = "vocal" | "instrumental";
 
-function pill(label: string, active: boolean, onClick: () => void, variant: "purple" | "amber" | "dark" = "purple", size: "sm" | "xs" = "sm") {
-  const colors = {
-    purple: { active: { bg:"#3B1F6A", border:"#A855F7", color:"#C084FC" }, inactive: { bg:"#1A1020", border:"#2A1F3A", color:"#6B7280" } },
-    amber:  { active: { bg:"#2A1A00", border:"#F59E0B", color:"#FCD34D" }, inactive: { bg:"#1A1020", border:"#2A1F3A", color:"#6B7280" } },
-    dark:   { active: { bg:"#1E1E1E", border:"#9CA3AF", color:"#E5E7EB" }, inactive: { bg:"#1A1020", border:"#2A1F3A", color:"#6B7280" } },
-  };
-  const c = active ? colors[variant].active : colors[variant].inactive;
-  return (
-    <button key={label} onClick={onClick} style={{ padding: size==="xs" ? "3px 8px" : "4px 10px", background:c.bg, border:`1px solid ${c.border}`, borderRadius:"20px", color:c.color, fontSize:size==="xs" ? "10px" : "11px", cursor:"pointer", transition:"all 0.15s", fontFamily:"'DM Sans', sans-serif", whiteSpace:"nowrap" as const }}>
-      {label}
-    </button>
-  );
+// ─── Style helpers ─────────────────────────────────────────────────────────────
+
+const s = {
+  col: { display: "flex" as const, flexDirection: "column" as const, height: "100%", overflow: "hidden" as const },
+  sectionLabel: { fontSize: "11px", letterSpacing: "0.12em", color: "var(--purple-dim)", textTransform: "uppercase" as const, padding: "14px 16px 8px", fontWeight: 500 },
+  paramCard: { background: "#1A1020", border: "1px solid #2A1F3A", borderRadius: "8px", padding: "10px 12px" },
+  paramLabel: { fontSize: "10px", color: "#5C526D", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: "6px", fontWeight: 500 },
+  select: { width: "100%", background: "transparent", border: "none", color: "#F5F1FA", fontSize: "13px", fontWeight: 500, outline: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" },
+  tag: (active: boolean) => ({
+    fontSize: "12px", padding: "5px 12px", borderRadius: "20px",
+    border: `1px solid ${active ? "#7C3AED" : "#2A2A30"}`,
+    background: active ? "#2D1B69" : "#1A1A1F",
+    color: active ? "#C084FC" : "#888578",
+    cursor: "pointer" as const, transition: "all 0.15s", fontWeight: active ? 500 : 400,
+  }),
+  amberTag: (active: boolean) => ({
+    fontSize: "12px", padding: "5px 12px", borderRadius: "20px",
+    border: `1px solid ${active ? "#F59E0B" : "#2A2A30"}`,
+    background: active ? "#2A1A00" : "#1A1A1F",
+    color: active ? "#FCD34D" : "#888578",
+    cursor: "pointer" as const, transition: "all 0.15s", fontWeight: active ? 500 : 400,
+  }),
+  purpleTag: (active: boolean) => ({
+    fontSize: "12px", padding: "5px 12px", borderRadius: "20px",
+    border: `1px solid ${active ? "#A855F7" : "#2A2A30"}`,
+    background: active ? "#1A1020" : "#1A1A1F",
+    color: active ? "#A855F7" : "#888578",
+    cursor: "pointer" as const, transition: "all 0.15s", fontWeight: active ? 500 : 400,
+  }),
+};
+
+function getVariantForStyle(st: string): "purple" | "amber" {
+  const cat = STYLE_CATEGORIES.find(c => c.label === st || c.subs.includes(st));
+  return cat?.variant ?? "purple";
 }
 
-// ─── Import Preset Row ────────────────────────────────────────────────────────
+// ─── Main Component ────────────────────────────────────────────────────────────
 
-function ImportPresetRow({ onImport }: { onImport: (desc: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [val, setVal] = useState("");
-  if (!open) return (
-    <button onClick={() => setOpen(true)} style={{ width:"100%", padding:"7px", background:"transparent", border:"1px solid var(--border)", borderRadius:"6px", color:"#6B7280", fontSize:"11px", cursor:"pointer", textAlign:"left" as const, marginBottom:"12px" }}>
-      + Import Preset / Describe Track
-    </button>
-  );
-  return (
-    <div style={{ display:"flex", gap:"6px", marginBottom:"12px" }}>
-      <input value={val} onChange={e => setVal(e.target.value)} onKeyDown={e => { if (e.key==="Enter" && val.trim()) { onImport(val.trim()); setVal(""); setOpen(false); } }} placeholder="Describe a track or paste a preset..." autoFocus
-        style={{ flex:1, background:"var(--bg-card)", border:"1px solid #3B1F6A", borderRadius:"6px", padding:"7px 8px", color:"var(--text-primary)", fontSize:"12px", fontFamily:"'DM Sans', sans-serif", outline:"none" }} />
-      <button onClick={() => { if (val.trim()) { onImport(val.trim()); setVal(""); setOpen(false); } }} style={{ padding:"7px 10px", background:"#3B1F6A", border:"1px solid #A855F7", borderRadius:"6px", color:"#C084FC", fontSize:"11px", cursor:"pointer" }}>Go</button>
-      <button onClick={() => setOpen(false)} style={{ padding:"7px 10px", background:"transparent", border:"1px solid var(--border)", borderRadius:"6px", color:"#6B7280", fontSize:"11px", cursor:"pointer" }}>✕</button>
-    </div>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
-export default function HomePage() {
-  const [title, setTitle]             = useState("");
-  const [styles, setStyles]           = useState<string[]>(["Boom Bap"]);
-  const [key, setKey]                 = useState("");
-  const [tempo, setTempo]             = useState("");
-  const [mood, setMood]               = useState("");
-  const [theme, setTheme]             = useState("");
-  const [language, setLanguage]       = useState("English");
-  const [trackMode, setTrackMode]     = useState<"instrumental"|"vocals">("instrumental");
-  const [vocalTone, setVocalTone]     = useState("");
-  const [intensity, setIntensity]     = useState(3);
-  const [instruments, setInstruments] = useState<string[]>([]);
-  const [exoticInstruments, setExoticInstruments] = useState<string[]>([]);
-  const [notes, setNotes]             = useState("");
-
-  const [result, setResult]           = useState("");
-  const [isStreaming, setIsStreaming]  = useState(false);
+export default function Home() {
+  const [activeStyles, setActiveStyles] = useState<string[]>(["Boom Bap"]);
+  const [openCat, setOpenCat] = useState<string | null>(null);
+  const [key, setKey] = useState("A minor");
+  const [tempo, setTempo] = useState("Boom Bap Beat (90–100 BPM)");
+  const [intensity, setIntensity] = useState(3);
+  const [instruments, setInstruments] = useState<string[]>(["808 Bass", "Piano"]);
+  const [language, setLanguage] = useState("English");
+  const [theme, setTheme] = useState("");
+  const [trackMode, setTrackMode] = useState<TrackMode>("vocal");
+  const [vocalStyle, setVocalStyle] = useState("Rapping");
+  const [importText, setImportText] = useState("");
+  const [importLoading, setImportLoading] = useState(false);
+  const [importDone, setImportDone] = useState(false);
+  const [combos, setCombos] = useState<{ icon: string; label: string; styles: string[] }[]>([]);
+  const [combosLoading, setCombosLoading] = useState(false);
+  const [combosForStyle, setCombosForStyle] = useState("");
+  const [result, setResult] = useState("");
   const [coverResult, setCoverResult] = useState("");
   const [videoResult, setVideoResult] = useState("");
-  const abortRef = useRef<AbortController | null>(null);
-
-  const [showDrafts, setShowDrafts]   = useState(false);
-  const [combos, setCombos]           = useState<string[]>([]);
-  const [combosLoading, setCombosLoading] = useState(false);
-  const [resetKey, setResetKey]       = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [inspireLoading, setInspireLoading] = useState(false);
+  const [randomLoading, setRandomLoading] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
 
   const { drafts, saveDraft, deleteDraft, toggleStar } = useDrafts();
+  const styleBlockRef = useRef<HTMLDivElement>(null);
+  const compositionTitle = result.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim() || "";
+  const instrumental = trackMode === "instrumental";
 
-  // ── helpers ──
-  function toggleStyle(s: string) {
-    setStyles(prev => prev.includes(s) ? prev.filter(x => x!==s) : [...prev, s]);
-  }
-  function toggleInstrument(i: string) {
-    setInstruments(prev => prev.includes(i) ? prev.filter(x => x!==i) : [...prev, i]);
-  }
-  function toggleExotic(i: string) {
-    setExoticInstruments(prev => prev.includes(i) ? prev.filter(x => x!==i) : [...prev, i]);
-  }
-
-  function applyPreset(p: typeof MOOD_PRESETS[0]) {
-    setStyles([p.style]); setKey(p.key); setTempo(p.tempo); setMood(p.mood); setTheme(p.theme);
-  }
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (styleBlockRef.current && !styleBlockRef.current.contains(e.target as Node)) {
+        setOpenCat(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   function clearAll() {
-    setTitle(""); setStyles(["Boom Bap"]); setKey(""); setTempo(""); setMood(""); setTheme("");
-    setLanguage("English"); setTrackMode("instrumental"); setVocalTone(""); setIntensity(3);
-    setInstruments([]); setExoticInstruments([]); setNotes(""); setResult("");
-    setCoverResult(""); setVideoResult(""); setCombos([]);
-    setResetKey(k => k+1);
+    setResult(""); setCoverResult(""); setVideoResult(""); setTheme("");
+    setActiveStyles(["Boom Bap"]); setKey("A minor");
+    setTempo("Boom Bap Beat (90–100 BPM)"); setIntensity(3);
+    setInstruments(["808 Bass", "Piano"]); setLanguage("English");
+    setTrackMode("vocal"); setVocalStyle("Rapping");
+    setCombos([]); setCombosForStyle(""); setOpenCat(null);
+    setResetKey(k => k + 1);
   }
 
-  // ── generate ──
+  function randomizeAll() {
+    const allSubs = STYLE_CATEGORIES.flatMap(c => c.subs);
+    const shuffled = [...allSubs].sort(() => Math.random() - 0.5);
+    setActiveStyles(shuffled.slice(0, 2));
+    setKey(KEYS[Math.floor(Math.random() * KEYS.length)]);
+    setTempo(TEMPOS[Math.floor(Math.random() * TEMPOS.length)]);
+    setIntensity(Math.floor(Math.random() * 5) + 1);
+    setCombos([]); setCombosForStyle("");
+  }
+
+  function toggleStyle(st: string) {
+    setActiveStyles(prev => {
+      if (prev.includes(st)) return prev.length > 1 ? prev.filter(x => x !== st) : prev;
+      if (prev.length >= 3) return prev;
+      return [...prev, st];
+    });
+  }
+
+  function removeStyle(st: string) {
+    setActiveStyles(prev => prev.length > 1 ? prev.filter(x => x !== st) : prev);
+  }
+
+  function isCatActive(cat: typeof STYLE_CATEGORIES[0]) {
+    return activeStyles.includes(cat.label) || cat.subs.some(sub => activeStyles.includes(sub));
+  }
+
+  function toggleInstrument(i: string) {
+    setInstruments(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
+  }
+
+  async function inspire() {
+    setInspireLoading(true);
+    setTheme("");
+    try {
+      const res = await fetch("/api/inspire", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ genre: activeStyles[0] || "Boom Bap" }),
+      });
+      const data = await res.json();
+      if (data.theme) setTheme(data.theme);
+    } catch {}
+    finally { setInspireLoading(false); }
+  }
+
+  async function randomTheme() {
+    setRandomLoading(true);
+    setTheme("");
+    try {
+      const res = await fetch("/api/random-theme", { method: "POST" });
+      const data = await res.json();
+      if (data.theme) setTheme(data.theme);
+      if (data.style) setActiveStyles([data.style]);
+      if (data.key) setKey(data.key);
+      if (data.tempo) setTempo(data.tempo);
+      if (data.intensity) setIntensity(data.intensity);
+    } catch {
+      setTheme("Late night city drive, neon lights reflecting off wet pavement...");
+    } finally { setRandomLoading(false); }
+  }
+
+  async function importPreset() {
+    if (!importText.trim()) return;
+    setImportLoading(true); setImportDone(false);
+    try {
+      const res = await fetch("/api/import-preset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: importText }),
+      });
+      const data = await res.json();
+      if (data.styles?.length) setActiveStyles(data.styles);
+      if (data.key) setKey(data.key);
+      if (data.tempo) setTempo(data.tempo);
+      if (data.intensity) setIntensity(data.intensity);
+      if (data.instruments?.length) setInstruments(data.instruments);
+      if (data.vocalTone) setVocalStyle(data.vocalTone);
+      if (data.theme) setTheme(data.theme);
+      setImportDone(true); setImportText("");
+      setTimeout(() => setImportDone(false), 2000);
+    } catch {}
+    finally { setImportLoading(false); }
+  }
+
+  async function findCombos() {
+    const style = activeStyles[0];
+    setCombosLoading(true); setCombos([]); setCombosForStyle(style);
+    try {
+      const res = await fetch("/api/combos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ styles: activeStyles }),
+      });
+      const data = await res.json();
+      if (data.combos) setCombos(data.combos);
+    } catch { setCombos([]); }
+    finally { setCombosLoading(false); }
+  }
+
   async function generate() {
-    if (isStreaming) { abortRef.current?.abort(); setIsStreaming(false); return; }
-    setResult(""); setCoverResult(""); setVideoResult(""); setIsStreaming(true);
-    abortRef.current = new AbortController();
+    setLoading(true); setIsStreaming(true);
+    setResult(""); setCoverResult(""); setVideoResult("");
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, styles, key, tempo, mood, theme, language, trackMode, vocalTone, intensity, instruments: [...instruments, ...exoticInstruments], notes }),
-        signal: abortRef.current.signal,
+        body: JSON.stringify({
+          styles: activeStyles, key, tempo, intensity,
+          instruments, language, theme, trackMode,
+          vocalTone: trackMode === "vocal" ? vocalStyle : "",
+          notes: "",
+        }),
       });
-      if (!res.ok || !res.body) { setIsStreaming(false); return; }
+      if (!res.ok || !res.body) { setLoading(false); setIsStreaming(false); return; }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
+      setLoading(false);
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         acc += decoder.decode(value, { stream: true });
         setResult(acc);
       }
-    } catch (e: unknown) {
-      if (e instanceof Error && e.name !== "AbortError") console.error(e);
-    } finally {
-      setIsStreaming(false);
-    }
+    } catch (e) {
+      console.error(e);
+    } finally { setLoading(false); setIsStreaming(false); }
   }
 
-  // ── combos ──
-  async function fetchCombos() {
-    if (styles.length === 0) return;
-    setCombosLoading(true); setCombos([]);
-    try {
-      const res = await fetch("/api/combos", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ styles }) });
-      const data = await res.json();
-      setCombos(data.combos || []);
-    } catch {}
-    setCombosLoading(false);
-  }
+  // Style name for hero heading
+  const heroStyle = activeStyles.length === 1 ? activeStyles[0] : activeStyles.slice(0, 2).join(" × ");
+  const heroVariant = getVariantForStyle(activeStyles[0]);
 
-  // ── import preset ──
-  async function importPreset(desc: string) {
-    try {
-      const res = await fetch("/api/import-preset", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ description: desc }) });
-      const data = await res.json();
-      if (data.title) setTitle(data.title);
-      if (data.styles?.length) setStyles(data.styles);
-      if (data.key) setKey(data.key);
-      if (data.tempo) setTempo(data.tempo);
-      if (data.mood) setMood(data.mood);
-      if (data.theme) setTheme(data.theme);
-      if (data.vocalTone) { setTrackMode("vocals"); setVocalTone(data.vocalTone); }
-      if (data.instruments?.length) setInstruments(data.instruments.filter((i: string) => INSTRUMENTS.includes(i)));
-    } catch {}
-  }
-
-  // ── inspire ──
-  async function inspireMe() {
-    try {
-      const res = await fetch("/api/inspire", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ genre: styles[0] || "Boom Bap" }) });
-      const data = await res.json();
-      if (data.title) setTitle(data.title);
-      if (data.mood) setMood(data.mood);
-      if (data.theme) setTheme(data.theme);
-    } catch {}
-  }
-
-  // ── randomize ──
-  async function randomize() {
-    try {
-      const res = await fetch("/api/random-theme", { method:"POST" });
-      const data = await res.json();
-      if (data.title) setTitle(data.title);
-      if (data.style) setStyles([data.style]);
-      if (data.styles?.length) setStyles(data.styles);
-      if (data.key) setKey(data.key);
-      if (data.tempo) setTempo(data.tempo);
-      if (data.mood) setMood(data.mood);
-      if (data.theme) setTheme(data.theme);
-    } catch {}
-  }
-
-  // ── load draft ──
-  const loadDraft = useCallback((draft: ReturnType<typeof useDrafts>["drafts"][0]) => {
-    setTitle(draft.title || ""); setStyles(draft.styles || ["Boom Bap"]);
-    setKey(draft.key || ""); setTempo(draft.tempo || ""); setMood(draft.mood || "");
-    setTheme(draft.theme || ""); setLanguage(draft.language || "English");
-    setTrackMode((draft.trackMode as "instrumental"|"vocals") || "instrumental");
-    setVocalTone(draft.outputType || ""); setIntensity(draft.intensity ?? 3);
-    setInstruments(draft.instruments || []); setResult(draft.result || "");
-    setShowDrafts(false);
-  }, []);
-
-  const doSaveDraft = () => saveDraft({ title, styles, key, tempo, mood, theme, language, trackMode, outputType: vocalTone, intensity, instruments, result });
-
-  // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 1fr 220px", gridTemplateRows:"auto 1fr", height:"100vh", background:"var(--bg-primary)", color:"var(--text-primary)", fontFamily:"'DM Sans', sans-serif", overflow:"hidden" }}>
-
-      {/* ── Header ── */}
-      <div style={{ gridColumn:"1 / -1" }}>
-        <Header
-          title={title}
-          composition={result}
-          coverResult={coverResult}
-          videoResult={videoResult}
-          vocalTone={vocalTone}
-          style={styles[0] || "Boom Bap"}
-          language={language}
-          onClear={clearAll}
-        />
-      </div>
-
-      {/* ── COLUMN 1: Cover Panel ── */}
-      <CoverPanel
-        key={`cover-${resetKey}`}
-        title={title}
-        style={styles[0] || "Boom Bap"}
-        mood={mood}
-        theme={theme}
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <Header
+        title={compositionTitle}
         composition={result}
-        compositionLoading={isStreaming}
-        onResult={setCoverResult}
+        coverResult={coverResult}
+        videoResult={videoResult}
+        vocalTone={trackMode === "vocal" ? vocalStyle : ""}
+        style={activeStyles.join(" + ")}
+        language={language}
+        onClear={clearAll}
       />
 
-      {/* ── COLUMN 2: Genres + Combos + Drafts ── */}
-      <div style={{ display:"flex", flexDirection:"column", borderRight:"1px solid var(--border)", overflow:"hidden" }}>
-        {showDrafts && (
-          <DraftsPanel
-            drafts={drafts}
-            onLoad={loadDraft}
-            onDelete={deleteDraft}
-            onStar={toggleStar}
-          />
-        )}
-        <div style={{ flex:1, overflow:"auto", padding:"12px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr 1fr", flex: 1, overflow: "hidden" }}>
 
-          {/* Quick Presets */}
-          <div style={{ marginBottom:"14px" }}>
-            <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"6px" }}>Quick Presets</div>
-            <div style={{ display:"flex", flexWrap:"wrap" as const, gap:"5px" }}>
+        {/* COVER PANEL */}
+        <CoverPanel
+          key={`cover-${resetKey}`}
+          title={compositionTitle}
+          style={activeStyles.join(" + ")}
+          mood={INTENSITY_LABELS[intensity]}
+          theme={theme}
+          composition={result}
+          compositionLoading={isStreaming}
+          onResult={setCoverResult}
+        />
+
+        {/* LEFT PANEL */}
+        <div style={{ ...s.col, background: "var(--bg-secondary)", borderRight: "1px solid var(--border)" }}>
+
+          {/* Hero */}
+          <div style={{ padding: "32px 20px 20px", borderBottom: "1px solid var(--border)" }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "44px", fontWeight: 700, color: "#F5F1FA", lineHeight: 1.05, letterSpacing: "-0.03em" }}>
+              Forge your next
+              <br />
+              <span style={{ color: heroVariant === "purple" ? "#A855F7" : "#F59E0B", fontStyle: "italic" }}>
+                {heroStyle.toLowerCase()} track
+              </span>
+            </div>
+            <div style={{ fontSize: "13px", color: "#5C526D", marginTop: "10px", lineHeight: 1.4 }}>
+              Select style, set parameters, generate.
+            </div>
+
+            {/* Mood presets */}
+            <div style={{ display: "flex", gap: "5px", marginTop: "10px", flexWrap: "wrap" as const }}>
               {MOOD_PRESETS.map(p => (
-                <button key={p.label} onClick={() => applyPreset(p)} style={{ display:"flex", alignItems:"center", gap:"4px", padding:"4px 8px", background:"#1A1020", border:"1px solid #2A1F3A", borderRadius:"6px", color:"#9CA3AF", fontSize:"11px", cursor:"pointer" }}>
-                  <span>{p.icon}</span><span>{p.label}</span>
+                <button key={p.label} onClick={() => { setKey(p.key); setTempo(p.tempo); setIntensity(p.intensity); setActiveStyles(p.styles); }}
+                  style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "20px", border: "1px solid #2A1F3A", background: "#1A1020", color: "#888578", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                  {p.icon} {p.label}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Style Categories */}
-          {STYLE_CATEGORIES.map(cat => (
-            <div key={cat.label} style={{ marginBottom:"10px" }}>
-              <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:cat.variant==="purple" ? "#A855F7" : "#9CA3AF", textTransform:"uppercase" as const, marginBottom:"5px" }}>{cat.label}</div>
-              <div style={{ display:"flex", flexWrap:"wrap" as const, gap:"4px" }}>
-                {cat.styles.map(s => pill(s, styles.includes(s), () => toggleStyle(s), cat.variant==="purple" ? "purple" : "dark", "xs"))}
-              </div>
-            </div>
-          ))}
-
-          {/* Style Combos */}
-          <div style={{ marginTop:"14px", borderTop:"1px solid var(--border)", paddingTop:"10px" }}>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"6px" }}>
-              <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const }}>Style Combos</div>
-              <button onClick={fetchCombos} disabled={combosLoading || styles.length===0} style={{ fontSize:"10px", padding:"2px 8px", background:"transparent", border:"1px solid #3B1F6A", borderRadius:"4px", color:"#A855F7", cursor:"pointer" }}>
-                {combosLoading ? "..." : "Generate"}
+            {/* Inspire + Random */}
+            <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
+              <button onClick={inspire} disabled={inspireLoading} style={{ flex: 1, padding: "8px 14px", background: inspireLoading ? "#1A1020" : "#1A1020", border: `1px solid ${inspireLoading ? "#3B1F6A" : "#A855F7"}`, borderRadius: "8px", color: inspireLoading ? "#5C526D" : "#A855F7", fontSize: "12px", fontWeight: 500, cursor: inspireLoading ? "not-allowed" : "pointer", letterSpacing: "0.06em", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s" }}>
+                {inspireLoading ? "Generating..." : "✶ Inspire Me"}
+              </button>
+              <button onClick={randomizeAll} title="Randomize everything"
+                style={{ padding: "8px 12px", background: "#1A1020", border: "1px solid #2A1F3A", borderRadius: "8px", color: "#888578", fontSize: "16px", cursor: "pointer", transition: "all 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#A855F7"; e.currentTarget.style.color = "#A855F7"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#2A1F3A"; e.currentTarget.style.color = "#888578"; }}>
+                \u{1F3B2}
               </button>
             </div>
-            {combos.length > 0 && (
-              <div style={{ display:"flex", flexWrap:"wrap" as const, gap:"4px" }}>
-                {combos.map(c => (
-                  <button key={c} onClick={() => setStyles(c.split(" × "))} style={{ fontSize:"10px", padding:"3px 8px", background:"#1A1020", border:"1px solid #3B1F6A", borderRadius:"12px", color:"#C084FC", cursor:"pointer" }}>
-                    {c}
-                  </button>
-                ))}
+          </div>
+
+          {/* Scrollable content */}
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <div style={s.sectionLabel}>Style</div>
+
+            {/* Style grid */}
+            <div ref={styleBlockRef} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px", padding: "0 12px" }}>
+              {STYLE_CATEGORIES.map(cat => {
+                const active = isCatActive(cat);
+                const isOpen = openCat === cat.id;
+                const v = cat.variant;
+                const activeColor = v === "purple" ? "#A855F7" : "#F59E0B";
+                const activeBg = v === "purple" ? "#2D1B69" : "#2A1A00";
+                const activeBorder = v === "purple" ? "#6D28D9" : "#B45309";
+                const activeText = v === "purple" ? "#C084FC" : "#FCD34D";
+                return (
+                  <div key={cat.id} style={{ position: "relative" }}>
+                    <div style={{ display: "flex", borderRadius: "20px", border: `1px solid ${active ? activeBorder : "#2A2A30"}`, background: active ? activeBg : "#1A1A1F", overflow: "hidden", transition: "all 0.15s" }}>
+                      <button onClick={() => { toggleStyle(cat.label); setOpenCat(null); }} style={{ flex: 1, fontSize: "12px", padding: "6px 4px 6px 10px", background: "transparent", border: "none", color: active ? activeText : "#888578", cursor: "pointer", textAlign: "left" as const, fontWeight: active ? 500 : 400, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {cat.label}
+                      </button>
+                      <button onClick={() => setOpenCat(isOpen ? null : cat.id)} style={{ width: "22px", background: "transparent", border: "none", borderLeft: `1px solid ${active ? activeBorder : "#2A2A30"}`, color: active ? activeColor : "#555", cursor: "pointer", fontSize: "9px", display: "flex", alignItems: "center", justifyContent: "center", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}>
+                        ▾
+                      </button>
+                    </div>
+                    {isOpen && (
+                      <div style={{ position: "absolute", top: "calc(100% + 3px)", left: 0, right: 0, background: "#1E1626", border: "1px solid #3A2A50", borderRadius: "10px", zIndex: 50, overflow: "hidden", minWidth: "110px" }}>
+                        {cat.subs.map((sub, idx) => {
+                          const subActive = activeStyles.includes(sub);
+                          return (
+                            <button key={sub} onClick={() => toggleStyle(sub)} style={{ display: "block", width: "100%", textAlign: "left" as const, padding: "7px 12px", background: subActive ? (v === "purple" ? "#1A1428" : "#1A1000") : "transparent", border: "none", borderBottom: idx < cat.subs.length - 1 ? "1px solid #2A2035" : "none", color: subActive ? (v === "purple" ? "#C084FC" : "#FCD34D") : "#888578", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                              {sub}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Active style chips */}
+            <div style={{ padding: "8px 12px 0", display: "flex", flexWrap: "wrap" as const, gap: "5px" }}>
+              {activeStyles.map(st => {
+                const v = getVariantForStyle(st);
+                return (
+                  <div key={st} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", padding: "3px 8px 3px 10px", borderRadius: "20px", border: `1px solid ${v === "purple" ? "#6D28D9" : "#B45309"}`, background: v === "purple" ? "#2D1B69" : "#2A1A00", color: v === "purple" ? "#C084FC" : "#FCD34D" }}>
+                    <span>{st}</span>
+                    <button onClick={() => removeStyle(st)} style={{ background: "none", border: "none", color: v === "purple" ? "#A855F7" : "#F59E0B", cursor: "pointer", fontSize: "12px", lineHeight: 1, padding: "0 0 0 2px" }}>×</button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {activeStyles.length >= 2 && (
+              <div style={{ margin: "6px 12px 0", padding: "7px 10px", background: "#1A1428", border: "1px solid #3A2A60", borderRadius: "6px", fontSize: "11px", color: "#B8A0F0" }}>
+                Blend mode — {activeStyles.length} styles active
               </div>
             )}
-          </div>
-        </div>
 
-        <div style={{ padding:"10px 12px", borderTop:"1px solid var(--border)", display:"flex", gap:"5px" }}>
-          <button onClick={() => setShowDrafts(v => !v)} style={{ flex:1, padding:"7px", background:"transparent", border:"1px solid var(--border)", borderRadius:"6px", color:"#9CA3AF", fontSize:"11px", cursor:"pointer" }}>
-            {showDrafts ? "Hide Drafts" : `Drafts (${drafts.length})`}
-          </button>
-          <button onClick={randomize} style={{ padding:"7px 10px", background:"transparent", border:"1px solid #3B1F6A", borderRadius:"6px", color:"#A855F7", fontSize:"11px", cursor:"pointer" }}>
-            ⚡ Random
-          </button>
-        </div>
-      </div>
+            <div style={{ height: "1px", background: "var(--border)", margin: "12px 0" }} />
 
-      {/* ── COLUMN 3: Controls + Result ── */}
-      <div style={{ display:"flex", flexDirection:"column", borderRight:"1px solid var(--border)", overflow:"hidden" }}>
-        <div style={{ flex:1, overflow:"auto", padding:"16px" }}>
-
-          {/* Title */}
-          <div style={{ marginBottom:"12px" }}>
-            <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"4px" }}>Track Title</div>
-            <div style={{ display:"flex", gap:"6px" }}>
-              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter track title..." style={{ flex:1, background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"6px", padding:"8px 10px", color:"var(--text-primary)", fontSize:"13px", fontFamily:"'DM Sans', sans-serif", outline:"none" }} />
-              <button onClick={inspireMe} style={{ padding:"8px 12px", background:"transparent", border:"1px solid #3B1F6A", borderRadius:"6px", color:"#A855F7", fontSize:"11px", cursor:"pointer", whiteSpace:"nowrap" as const }}>✦ Inspire</button>
-            </div>
-          </div>
-
-          <ImportPresetRow onImport={importPreset} />
-
-          {/* Key & Tempo */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"12px" }}>
-            <div>
-              <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"4px" }}>Key</div>
-              <select value={key} onChange={e => setKey(e.target.value)} style={{ width:"100%", background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"6px", padding:"7px 8px", color:key ? "var(--text-primary)" : "#6B7280", fontSize:"12px", fontFamily:"'DM Sans', sans-serif", outline:"none" }}>
-                <option value="">Any Key</option>
-                {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
-              </select>
-            </div>
-            <div>
-              <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"4px" }}>Tempo</div>
-              <select value={tempo} onChange={e => setTempo(e.target.value)} style={{ width:"100%", background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"6px", padding:"7px 8px", color:tempo ? "var(--text-primary)" : "#6B7280", fontSize:"12px", fontFamily:"'DM Sans', sans-serif", outline:"none" }}>
-                <option value="">Any Tempo</option>
-                {TEMPOS.map(t => <option key={t.label} value={`${t.label} (${t.bpm})`}>{t.label} ({t.bpm})</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Mood & Theme */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"12px" }}>
-            <div>
-              <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"4px" }}>Mood</div>
-              <input value={mood} onChange={e => setMood(e.target.value)} placeholder="e.g. melancholic, dark..." style={{ width:"100%", boxSizing:"border-box" as const, background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"6px", padding:"7px 8px", color:"var(--text-primary)", fontSize:"12px", fontFamily:"'DM Sans', sans-serif", outline:"none" }} />
-            </div>
-            <div>
-              <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"4px" }}>Theme</div>
-              <input value={theme} onChange={e => setTheme(e.target.value)} placeholder="e.g. hustle, love, streets..." style={{ width:"100%", boxSizing:"border-box" as const, background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"6px", padding:"7px 8px", color:"var(--text-primary)", fontSize:"12px", fontFamily:"'DM Sans', sans-serif", outline:"none" }} />
-            </div>
-          </div>
-
-          {/* Intensity */}
-          <div style={{ marginBottom:"12px" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"6px" }}>
-              <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const }}>Intensity</div>
-              <div style={{ fontSize:"11px", color:"#A855F7" }}>{INTENSITY_LABELS[intensity]}</div>
-            </div>
-            <input type="range" min={1} max={5} value={intensity} onChange={e => setIntensity(Number(e.target.value))} style={{ width:"100%", accentColor:"#A855F7" }} />
-          </div>
-
-          {/* Track Mode */}
-          <div style={{ marginBottom:"12px" }}>
-            <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"6px" }}>Track Mode</div>
-            <div style={{ display:"flex", gap:"6px" }}>
-              {(["instrumental","vocals"] as const).map(m => (
-                <button key={m} onClick={() => setTrackMode(m)} style={{ flex:1, padding:"7px", background:trackMode===m ? "#3B1F6A" : "var(--bg-card)", border:`1px solid ${trackMode===m ? "#A855F7" : "var(--border)"}`, borderRadius:"6px", color:trackMode===m ? "#C084FC" : "#6B7280", fontSize:"11px", cursor:"pointer" }}>
-                  {m==="instrumental" ? "Instrumental" : "With Vocals"}
+            {/* Style Combos */}
+            <div style={{ padding: "0 12px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ fontSize: "11px", letterSpacing: "0.12em", color: "var(--purple-dim)", textTransform: "uppercase" as const, fontWeight: 500 }}>Style Combos</div>
+                <button onClick={findCombos} disabled={combosLoading} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "6px", border: `1px solid ${combosLoading ? "#2A2A30" : "#A855F7"}`, background: combosLoading ? "#1A1A1F" : "#1A1020", color: combosLoading ? "#5C526D" : "#A855F7", cursor: combosLoading ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                  {combosLoading ? "Finding..." : `✶ Find for ${activeStyles[0]}`}
                 </button>
-              ))}
+              </div>
+              {combos.length === 0 && !combosLoading && (
+                <div style={{ fontSize: "11px", color: "#444", fontStyle: "italic", textAlign: "center" as const, padding: "12px 0" }}>Pick a style, then click Find</div>
+              )}
+              {combosLoading && (
+                <div style={{ fontSize: "11px", color: "var(--purple-dim)", textAlign: "center" as const, padding: "12px 0" }}>
+                  <span style={{ color: "#A855F7" }}>●</span> Generating combos for {combosForStyle}...
+                </div>
+              )}
+              {combos.length > 0 && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px" }}>
+                  {combos.map((combo) => {
+                    const comboStyles = Array.isArray(combo.styles) ? combo.styles : (typeof combo === "string" ? [combo] : []);
+                    const isActive = comboStyles.length > 0 && comboStyles.every(s => activeStyles.includes(s));
+                    const label = combo.label || (typeof combo === "string" ? combo : "");
+                    const icon = combo.icon || "";
+                    return (
+                      <button key={label} onClick={() => comboStyles.length > 0 && setActiveStyles(comboStyles)} style={{ fontSize: "11px", padding: "7px 8px", borderRadius: "8px", border: `1px solid ${isActive ? "#A855F7" : "#2A2A30"}`, background: isActive ? "#1A1020" : "#1A1A1F", color: isActive ? "#A855F7" : "#888578", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textAlign: "left" as const }}>
+                        <div style={{ marginBottom: "2px" }}>{icon} {label}</div>
+                        <div style={{ fontSize: "10px", opacity: 0.6, lineHeight: 1.3 }}>{comboStyles.join(" · ")}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Vocal Tone */}
-          {trackMode==="vocals" && (
-            <div style={{ marginBottom:"12px" }}>
-              <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"6px" }}>Vocal Style</div>
-              <div style={{ display:"flex", flexWrap:"wrap" as const, gap:"4px" }}>
-                {VOCAL_TONES.map(vt => pill(vt, vocalTone===vt, () => setVocalTone(vt===vocalTone ? "" : vt), "purple", "xs"))}
+            <div style={{ height: "1px", background: "var(--border)", margin: "12px 0" }} />
+
+            {/* History */}
+            <div style={s.sectionLabel}>History</div>
+            <DraftsPanel
+              drafts={drafts}
+              onLoad={(draft) => {
+                setActiveStyles(draft.styles);
+                setResult(draft.result);
+                if (draft.key) setKey(draft.key);
+                if (draft.tempo) setTempo(draft.tempo);
+                if (draft.intensity) setIntensity(draft.intensity ?? 3);
+                if (draft.language) setLanguage(draft.language);
+                if (draft.trackMode) setTrackMode(draft.trackMode as TrackMode);
+                if (draft.instruments) setInstruments(draft.instruments);
+                if (draft.outputType) setVocalStyle(draft.outputType);
+                if (draft.theme) setTheme(draft.theme);
+              }}
+              onDelete={deleteDraft}
+              onStar={toggleStar}
+            />
+          </div>
+        </div>
+
+        {/* MAIN PANEL */}
+        <div style={{ ...s.col, background: "var(--bg-primary)" }}>
+
+          {/* Key / Tempo / Intensity */}
+          <div style={{ padding: "16px", borderBottom: "1px solid var(--border)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+              <div style={s.paramCard}>
+                <div style={s.paramLabel}>Key</div>
+                <select style={s.select} value={key} onChange={e => setKey(e.target.value)}>
+                  {KEYS.map(k => <option key={k} style={{ background: "#141418" }}>{k}</option>)}
+                </select>
+              </div>
+              <div style={s.paramCard}>
+                <div style={s.paramLabel}>Tempo</div>
+                <select style={s.select} value={tempo} onChange={e => setTempo(e.target.value)}>
+                  {TEMPOS.map(t => <option key={t} style={{ background: "#141418" }}>{t}</option>)}
+                </select>
+              </div>
+              <div style={s.paramCard}>
+                <div style={s.paramLabel}>Intensity</div>
+                <div style={{ display: "flex", gap: "4px", marginTop: "4px" }}>
+                  {[1,2,3,4,5].map(n => (
+                    <button key={n} onClick={() => setIntensity(n)} style={{ height: "6px", flex: 1, borderRadius: "2px", border: "none", background: n <= intensity ? "#A855F7" : "var(--border)", cursor: "pointer" }} />
+                  ))}
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--purple-dim)", marginTop: "5px" }}>{INTENSITY_LABELS[intensity]}</div>
               </div>
             </div>
-          )}
-
-          {/* Language */}
-          <div style={{ marginBottom:"12px" }}>
-            <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"4px" }}>Language</div>
-            <select value={language} onChange={e => setLanguage(e.target.value)} style={{ width:"100%", background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"6px", padding:"7px 8px", color:"var(--text-primary)", fontSize:"12px", fontFamily:"'DM Sans', sans-serif", outline:"none" }}>
-              {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
           </div>
 
-          {/* Instruments */}
-          <div style={{ marginBottom:"10px" }}>
-            <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"6px" }}>Instruments</div>
-            <div style={{ display:"flex", flexWrap:"wrap" as const, gap:"4px" }}>
-              {INSTRUMENTS.map(i => pill(i, instruments.includes(i), () => toggleInstrument(i), "purple", "xs"))}
+          {/* Scrollable params */}
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+
+              {/* Theme */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <div style={s.paramLabel}>Theme / Scene</div>
+                  <button onClick={randomTheme} disabled={randomLoading} title="Random theme"
+                    style={{ background: "none", border: "1px solid #2A2A30", borderRadius: "6px", color: randomLoading ? "#5C526D" : "#888578", fontSize: "14px", cursor: randomLoading ? "not-allowed" : "pointer", padding: "2px 8px", lineHeight: 1 }}
+                    onMouseEnter={e => { if (!randomLoading) { e.currentTarget.style.borderColor = "#A855F7"; e.currentTarget.style.color = "#A855F7"; } }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#2A2A30"; e.currentTarget.style.color = randomLoading ? "#5C526D" : "#888578"; }}>
+                    {randomLoading ? "⟳" : "\u{1F3B2}"}
+                  </button>
+                </div>
+                <textarea value={theme} onChange={e => setTheme(e.target.value)} placeholder="Late night city streets, neon lights, hustle and reflection..." style={{ width: "100%", height: "80px", background: "#141418", border: "1px solid #2A1F3A", borderRadius: "8px", padding: "8px 12px", color: "var(--text-secondary)", fontSize: "12px", resize: "none" as const, outline: "none", fontFamily: "'DM Mono', monospace", lineHeight: "1.7", boxSizing: "border-box" as const }} />
+              </div>
+
+              {/* Import Preset */}
+              <div>
+                <div style={s.paramLabel}>Import Preset</div>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <textarea value={importText} onChange={e => setImportText(e.target.value)} placeholder="Paste any Suno preset, description, or idea..." style={{ flex: 1, height: "56px", background: "#141418", border: "1px solid #2A1F3A", borderRadius: "8px", padding: "8px 12px", color: "var(--text-secondary)", fontSize: "12px", resize: "none" as const, outline: "none", fontFamily: "'DM Mono', monospace", lineHeight: "1.5", boxSizing: "border-box" as const }} />
+                  <button onClick={importPreset} disabled={importLoading || !importText.trim()} style={{ padding: "0 14px", borderRadius: "8px", border: "none", background: importDone ? "#2D1B69" : importLoading || !importText.trim() ? "#1A1A1F" : "#A855F7", color: importDone ? "#C084FC" : importLoading || !importText.trim() ? "#5C526D" : "#0D0D0F", fontSize: "12px", fontWeight: 600, cursor: importLoading || !importText.trim() ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" as const }}>
+                    {importDone ? "Done ✓" : importLoading ? "..." : "Import ↗"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Instrumentation */}
+              <div>
+                <div style={s.paramLabel}>Instrumentation</div>
+                <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "5px" }}>
+                  {INSTRUMENTS.map(i => <button key={i} onClick={() => toggleInstrument(i)} style={s.tag(instruments.includes(i))}>{i}</button>)}
+                </div>
+                <div style={{ fontSize: "10px", color: "#5C526D", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginTop: "8px", marginBottom: "6px", fontWeight: 500 }}>World & Exotic</div>
+                <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "5px" }}>
+                  {EXOTIC_INSTRUMENTS.map(i => <button key={i} onClick={() => toggleInstrument(i)} style={s.amberTag(instruments.includes(i))}>{i}</button>)}
+                </div>
+              </div>
+
+              {/* Language */}
+              <div>
+                <div style={s.paramLabel}>Language</div>
+                <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "5px" }}>
+                  {LANGUAGES.map(l => <button key={l} onClick={() => setLanguage(l)} style={s.tag(language === l)}>{l}</button>)}
+                </div>
+              </div>
+
+              {/* Mode */}
+              <div>
+                <div style={s.paramLabel}>Mode</div>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {(["vocal", "instrumental"] as TrackMode[]).map(m => (
+                    <button key={m} onClick={() => setTrackMode(m)} style={s.purpleTag(trackMode === m)}>
+                      {m === "vocal" ? "\u{1F3A4} Vocal" : "\u{1F3B9} Instrumental"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vocal style */}
+              {trackMode === "vocal" && (
+                <div style={{ background: "#141418", border: "1px solid #2A1F3A", borderRadius: "8px", padding: "10px 12px" }}>
+                  <div style={{ ...s.paramLabel, marginBottom: "8px" }}>Vocal Style</div>
+                  <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "5px" }}>
+                    {VOCAL_STYLES.map(vs => <button key={vs} onClick={() => setVocalStyle(vs)} style={s.tag(vocalStyle === vs)}>{vs}</button>)}
+                  </div>
+                  <div style={{ marginTop: "8px", fontSize: "11px", color: "#A855F7", fontStyle: "italic" }}>
+                    → {vocalStyle}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Song Output */}
+            <ResultPanel result={result} loading={loading} isStreaming={isStreaming} />
           </div>
 
-          {/* World Instruments */}
-          <div style={{ marginBottom:"12px" }}>
-            <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"6px" }}>World Instruments</div>
-            <div style={{ display:"flex", flexWrap:"wrap" as const, gap:"4px" }}>
-              {EXOTIC_INSTRUMENTS.map(i => pill(i, exoticInstruments.includes(i), () => toggleExotic(i), "amber", "xs"))}
-            </div>
+          {/* Bottom bar */}
+          <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", display: "flex", gap: "8px" }}>
+            <button onClick={() => { if (result) saveDraft({ title: compositionTitle || "Untitled", styles: activeStyles, outputType: vocalStyle, result, key, tempo, intensity, language, trackMode, instruments, mood: INTENSITY_LABELS[intensity], theme }); }} disabled={!result}
+              style={{ padding: "10px 16px", background: "transparent", border: "1px solid var(--border)", borderRadius: "6px", color: result ? "#888578" : "#5C526D", fontSize: "12px", cursor: result ? "pointer" : "not-allowed" }}>
+              Save Draft
+            </button>
+            <button onClick={generate} disabled={loading || isStreaming} style={{ flex: 1, padding: "10px", background: loading || isStreaming ? "#1A1020" : "#A855F7", border: "none", borderRadius: "6px", color: loading || isStreaming ? "#5C526D" : "#0D0D0F", fontSize: "13px", fontWeight: 600, cursor: loading || isStreaming ? "not-allowed" : "pointer", letterSpacing: "0.04em", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s" }}>
+              {loading || isStreaming ? "Generating..." : "Forge Track ↗"}
+            </button>
           </div>
-
-          {/* Notes */}
-          <div style={{ marginBottom:"12px" }}>
-            <div style={{ fontSize:"9px", letterSpacing:"0.12em", color:"#6B7280", textTransform:"uppercase" as const, marginBottom:"4px" }}>Additional Notes</div>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional directions..." rows={2} style={{ width:"100%", boxSizing:"border-box" as const, background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"6px", padding:"8px 10px", color:"var(--text-primary)", fontSize:"12px", fontFamily:"'DM Sans', sans-serif", outline:"none", resize:"vertical" as const }} />
-          </div>
-
-          {/* Result */}
-          {result && (
-            <ResultPanel result={result} isStreaming={isStreaming} />
-          )}
         </div>
 
-        {/* Bottom bar */}
-        <div style={{ padding:"12px 16px", borderTop:"1px solid var(--border)", display:"flex", gap:"6px" }}>
-          {result && !isStreaming && (
-            <>
-              <button onClick={doSaveDraft} style={{ padding:"10px 12px", background:"transparent", border:"1px solid #3B1F6A", borderRadius:"6px", color:"#A855F7", fontSize:"11px", cursor:"pointer" }}>Save ★</button>
-              <button onClick={() => exportTXT(title || "hiphop-track", result)} style={{ padding:"10px 12px", background:"transparent", border:"1px solid #888578", borderRadius:"6px", color:"#F0EDE6", fontSize:"11px", cursor:"pointer" }}>TXT ↓</button>
-              <button onClick={() => exportPDF(title || "hiphop-track", result)} style={{ padding:"10px 12px", background:"transparent", border:"1px solid #888578", borderRadius:"6px", color:"#F0EDE6", fontSize:"11px", cursor:"pointer" }}>PDF ↓</button>
-            </>
-          )}
-          <button onClick={clearAll} style={{ padding:"10px 14px", background:"transparent", border:"1px solid var(--border)", borderRadius:"6px", color:"#6B7280", fontSize:"11px", cursor:"pointer" }}>Clear</button>
-          <button onClick={generate} style={{ flex:1, padding:"10px", background:isStreaming ? "#1A1020" : "var(--border-purple)", border:`1px solid ${isStreaming ? "#6D28D9" : "#A855F7"}`, borderRadius:"6px", color:"#C084FC", fontSize:"12px", letterSpacing:"0.06em", textTransform:"uppercase" as const, cursor:"pointer", fontFamily:"'DM Sans', sans-serif", transition:"all 0.2s" }}>
-            {isStreaming ? "■ Stop" : "Forge Track"}
-          </button>
-        </div>
+        {/* VIDEO PANEL */}
+        <VideoPanel
+          key={`video-${resetKey}`}
+          title={compositionTitle}
+          style={activeStyles.join(" + ")}
+          mood={INTENSITY_LABELS[intensity]}
+          theme={theme}
+          composition={result}
+          compositionLoading={isStreaming}
+          onResult={setVideoResult}
+        />
       </div>
-
-      {/* ── COLUMN 4: Video Panel ── */}
-      <VideoPanel
-        key={`video-${resetKey}`}
-        title={title}
-        style={styles[0] || "Boom Bap"}
-        mood={mood}
-        theme={theme}
-        composition={result}
-        compositionLoading={isStreaming}
-        onResult={setVideoResult}
-      />
     </div>
   );
 }

@@ -16,7 +16,7 @@ Return ONLY this exact JSON format, nothing else:
   "theme": "2-4 sentence cinematic scene, specific time, place, emotional detail, poetic but concrete",
   "style": "one of: Boom Bap, Trap, Neo-Soul, Contemporary R&B, Drill, Cloud Rap, Conscious Rap, Lo-Fi Hip-Hop, Alt-R&B, Melodic Trap",
   "key": "one of: A minor, D minor, F major, G minor, C major, Bb major, E minor, Ab major, F minor, C minor",
-  "tempo": "one of: Lo-Fi Drift (60–80 BPM), Slow Groove (80–95 BPM), Mid Trap (95–120 BPM), Bounce (120–140 BPM), Drill Pace (140–160 BPM)",
+  "tempo": "one of: Lo-Fi Drift (60–80 BPM), Slow Jam (65–75 BPM), Neo-Soul Groove (80–95 BPM), Mid-Tempo Flow (85–100 BPM), Boom Bap Beat (90–100 BPM), Cruising Tempo (95–110 BPM), Trap Bounce (130–145 BPM), Drill Pace (140–160 BPM)",
   "intensity": 1, 2, 3, 4, or 5
 }
 
