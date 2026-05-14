@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0F0B14;
+  --bg-secondary: #17121F;
+  --bg-panel: #17121F;
+  --bg-card: #221A2E;
+
+  --purple: #A855F7;
+  --purple-dim: #6D28D9;
+  --purple-light: #C084FC;
+  --amber: #F59E0B;
+  --amber-dim: #B45309;
+  --amber-light: #FCD34D;
+  --border-purple: #3B1F6A;
+
+  --text-primary: #F5F1FA;
+  --text-secondary: #B7AEC6;
+  --text-muted: #5C526D;
+  --border: #31263F;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--purple-dim); }
+::selection { background: var(--purple-dim); color: var(--text-primary); }

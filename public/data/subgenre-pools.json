@@ -1,0 +1,72 @@
+{
+  "boomBap": {
+    "groove": ["laid-back", "head-nod", "dusty-swing", "cratedigger roll", "bar-led", "snare-pocketed", "classic knock", "midnight looped", "streetwise bounce"],
+    "texture": ["dusty-soul chop", "vinyl-crackle loop", "raw drum break", "jazzed sample fragment", "worn bassline", "dry snare knock", "filter-aged keys", "looped horn haze", "crate-stained texture"],
+    "mood": ["reflective street warmth", "stoop-side memory", "concrete wisdom", "night-corner focus", "city-poet calm", "brownstone introspection", "lived-in confidence", "late-train thoughtfulness", "winter-jacket realism"],
+    "preferredPairings": [["laid-back", "dusty-soul chop"], ["head-nod", "raw drum break"], ["cratedigger roll", "crate-stained texture"]],
+    "forbiddenPairings": [["streetwise bounce", "festival-edm glare"], ["bar-led", "bubblegum cheer"]]
+  },
+  "jazzRap": {
+    "groove": ["easy-swing", "cafe-loose", "upright-pocketed", "smooth-roll", "cool-headed drift", "brush-kissed bounce", "smoked-lounge glide", "lyrical sway", "after-hours nod"],
+    "texture": ["upright bass warmth", "jazz piano chop", "soft horn phrase", "dusty ride shimmer", "soul-jazz loop", "vinyl room tone", "rhodes fragment", "muted trumpet haze", "late-session chords"],
+    "mood": ["cool intelligence", "after-hours reflection", "bookish confidence", "rain-window ease", "city-lit poise", "soft-brim introspection", "espresso-hour calm", "velvet thoughtfulness", "measured charm"],
+    "preferredPairings": [["easy-swing", "jazz piano chop"], ["smoked-lounge glide", "muted trumpet haze"], ["after-hours nod", "velvet thoughtfulness"]],
+    "forbiddenPairings": [["upright-pocketed", "airhorn-chaos"], ["cool-headed drift", "stadium-rage blur"]]
+  },
+  "soulRap": {
+    "groove": ["warm-roll", "heart-led bounce", "human sway", "sample-deep glide", "steady knock", "soul-pocketed", "golden loop motion", "late-afternoon nod", "felt-lined groove"],
+    "texture": ["gospel-soul chop", "warm bass cushion", "organ-glow loop", "vocal sample dust", "vinyl-soft drums", "horn-memory texture", "butter keys", "tape-aged soul fragment", "deep snare warmth"],
+    "mood": ["healed struggle", "human resilience", "warm reflection", "street soul honesty", "family-photo melancholy", "sun-through-window resolve", "earned tenderness", "autumn memory", "grown-man calm"],
+    "preferredPairings": [["warm-roll", "gospel-soul chop"], ["human sway", "vocal sample dust"], ["felt-lined groove", "earned tenderness"]],
+    "forbiddenPairings": [["steady knock", "neon-rave gloss"], ["golden loop motion", "hyperpop-chaos"]]
+  },
+  "trap": {
+    "groove": ["808-led", "hat-skittered", "sub-heavy stride", "dark-bounce", "menace-paced", "half-lit roll", "night-drive pulse", "tight-modern swing", "luxury-trap motion"],
+    "texture": ["sharp hat lattice", "deep 808 pressure", "bell-dark motif", "minimal synth menace", "clipped snare flash", "sub-glide line", "airy pad threat", "cold pluck loop", "modern trap sheen"],
+    "mood": ["cold flex", "diamond-dark confidence", "night freeway focus", "wealth under threat", "high-rise isolation", "calculated hunger", "designer paranoia", "late-hour menace", "velvet danger"],
+    "preferredPairings": [["808-led", "deep 808 pressure"], ["hat-skittered", "sharp hat lattice"], ["luxury-trap motion", "diamond-dark confidence"]],
+    "forbiddenPairings": [["night-drive pulse", "campfire-folk warmth"], ["menace-paced", "playground-whimsy"]]
+  },
+  "melodicTrap": {
+    "groove": ["sing-rap glide", "hook-led bounce", "808-melody drift", "soft-trap roll", "heartbreak pulse", "late-night wave", "glossy-sad swing", "autotuned sway", "memory-loop motion"],
+    "texture": ["melodic 808 line", "wet lead synth", "airy trap pad", "echoed guitar loop", "glazed hats", "vocal-layer shimmer", "minor-key pluck", "sad-chime motif", "wide hook texture"],
+    "mood": ["luxury heartbreak", "sad-star glow", "coded vulnerability", "night-window longing", "soft flex sorrow", "text-message ache", "rainy penthouse isolation", "digitally bruised romance", "melodic loneliness"],
+    "preferredPairings": [["sing-rap glide", "melodic 808 line"], ["heartbreak pulse", "sad-chime motif"], ["autotuned sway", "digitally bruised romance"]],
+    "forbiddenPairings": [["hook-led bounce", "barn-dance cheer"], ["late-night wave", "military-march triumph"]]
+  },
+  "drill": {
+    "groove": ["sliding menace", "stark-step", "cold-bounce", "clipped threat", "night-block pacing", "drill-lurch", "spare attack", "sub-knife motion", "tight-danger pulse"],
+    "texture": ["sliding 808 threat", "stark piano motif", "tight snare jab", "dark room reverb", "minimal bell menace", "numb pad shadow", "cold perc click", "UK/NY drill starkness", "knife-edge low end"],
+    "mood": ["street paranoia", "winter hostility", "tight-jaw focus", "late-block tension", "cold retaliation", "concrete threat", "numb aggression", "hooded vigilance", "ruthless stillness"],
+    "preferredPairings": [["sliding menace", "sliding 808 threat"], ["stark-step", "stark piano motif"], ["tight-danger pulse", "hooded vigilance"]],
+    "forbiddenPairings": [["cold-bounce", "summer-beach-pop"], ["spare attack", "festival-confetti joy"]]
+  },
+  "cloudRap": {
+    "groove": ["floating", "haze-drifting", "slow-roll", "weightless sway", "dream-pocketed", "mist-glide", "airborne pulse", "soft-fall motion", "vapor-step"],
+    "texture": ["washed synth cloud", "reverb-wrapped hats", "misty sample glow", "subtle 808 fog", "airy vocal blur", "dream-pad spread", "floating bell line", "soft texture grain", "ambient rap wash"],
+    "mood": ["detached melancholy", "purple-sky drift", "sleep-deprived calm", "vapor loneliness", "distant confidence", "float-state numbness", "dream-framed flex", "hazy solitude", "midair introspection"],
+    "preferredPairings": [["floating", "washed synth cloud"], ["mist-glide", "dream-pad spread"], ["vapor-step", "purple-sky drift"]],
+    "forbiddenPairings": [["slow-roll", "crowd-hype siren"], ["airborne pulse", "bar-fight chaos"]]
+  },
+  "neoSoulRnb": {
+    "groove": ["elastic", "honey-swing", "musician-pocketed", "soft-syncopated", "velvet roll", "late-room sway", "human glide", "butter-groove", "warm pulse"],
+    "texture": ["rhodes warmth", "live bass caress", "soft drum pocket", "harmony-rich keys", "guitar silk", "deep chord bloom", "analog room air", "soul-backing stack", "subtle percussion lace"],
+    "mood": ["intimate wisdom", "grown tenderness", "candlelit honesty", "late-room closeness", "earth-warm desire", "self-aware softness", "velvet sincerity", "healed intimacy", "brown-gold calm"],
+    "preferredPairings": [["elastic", "rhodes warmth"], ["musician-pocketed", "live bass caress"], ["velvet roll", "candlelit honesty"]],
+    "forbiddenPairings": [["soft-syncopated", "ice-rave glare"], ["warm pulse", "combat-zone siren"]]
+  },
+  "contemporaryRnb": {
+    "groove": ["polished sway", "hook-soft bounce", "velvet pulse", "midnight glide", "slow-burn roll", "radio-sleek motion", "clean sensual step", "smooth pocket", "late-luxury flow"],
+    "texture": ["glossy pads", "silky vocal stack", "soft sub cushion", "clean clap shine", "plush keys", "restrained hats", "modern reverb glow", "wide hook atmosphere", "expensive minimalism"],
+    "mood": ["sleek intimacy", "soft seduction", "midnight confidence", "luxury closeness", "glass-lit romance", "warm designer calm", "private after-hours heat", "controlled longing", "smooth emotional polish"],
+    "preferredPairings": [["polished sway", "silky vocal stack"], ["midnight glide", "modern reverb glow"], ["late-luxury flow", "luxury closeness"]],
+    "forbiddenPairings": [["radio-sleek motion", "garage-band rawness"], ["clean sensual step", "riot-zone abrasion"]]
+  },
+  "altRnb": {
+    "groove": ["fractured sway", "ghost-pocketed", "late-breathing", "broken-sensual roll", "negative-space pulse", "moody drift", "half-lit motion", "detuned glide", "fragile groove"],
+    "texture": ["distorted vocal air", "broken pad haze", "warped drum frame", "subdued low-end mist", "guitar-ghost texture", "hollow keys", "degraded sample smear", "shadow reverb", "asymmetric atmosphere"],
+    "mood": ["beautiful unease", "midnight alienation", "damaged intimacy", "private unraveling", "urban insomnia", "flickering desire", "soft collapse", "detached longing", "neon loneliness"],
+    "preferredPairings": [["fractured sway", "broken pad haze"], ["negative-space pulse", "asymmetric atmosphere"], ["fragile groove", "beautiful unease"]],
+    "forbiddenPairings": [["late-breathing", "football-anthem triumph"], ["moody drift", "sitcom-bright cheer"]]
+  }
+}
