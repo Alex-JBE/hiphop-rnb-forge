@@ -361,7 +361,7 @@ export default function Home() {
                 style={{ padding: "8px 12px", background: "#1A1020", border: "1px solid #2A1F3A", borderRadius: "8px", color: "#888578", fontSize: "16px", cursor: "pointer", transition: "all 0.2s" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "#A855F7"; e.currentTarget.style.color = "#A855F7"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "#2A1F3A"; e.currentTarget.style.color = "#888578"; }}>
-                \u{1F3B2}
+                🎲
               </button>
             </div>
           </div>
