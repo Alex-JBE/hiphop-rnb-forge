@@ -517,7 +517,7 @@ export default function Home() {
           </div>
 
           {/* Scrollable params */}
-          <div style={{ flex: 1, overflow: "auto" }}>
+          <div style={{ flex: 1, overflow: "auto", minHeight: 0 }}>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column" as const, gap: "12px" }}>
 
               {/* Theme */}
