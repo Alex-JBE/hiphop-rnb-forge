@@ -83,27 +83,27 @@ const s = {
   col: { display: "flex" as const, flexDirection: "column" as const, height: "100%", overflow: "hidden" as const },
   sectionLabel: { fontSize: "11px", letterSpacing: "0.12em", color: "var(--purple-dim)", textTransform: "uppercase" as const, padding: "14px 16px 8px", fontWeight: 500 },
   paramCard: { background: "#1A1020", border: "1px solid #2A1F3A", borderRadius: "8px", padding: "10px 12px" },
-  paramLabel: { fontSize: "10px", color: "#5C526D", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: "6px", fontWeight: 500 },
+  paramLabel: { fontSize: "10px", color: "#8C829D", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: "6px", fontWeight: 500 },
   select: { width: "100%", background: "transparent", border: "none", color: "#F5F1FA", fontSize: "13px", fontWeight: 500, outline: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" },
   tag: (active: boolean) => ({
     fontSize: "12px", padding: "5px 12px", borderRadius: "20px",
     border: `1px solid ${active ? "#7C3AED" : "#2A2A30"}`,
     background: active ? "#2D1B69" : "#1A1A1F",
-    color: active ? "#C084FC" : "#888578",
+    color: active ? "#C084FC" : "#B8B2A8",
     cursor: "pointer" as const, transition: "all 0.15s", fontWeight: active ? 500 : 400,
   }),
   amberTag: (active: boolean) => ({
     fontSize: "12px", padding: "5px 12px", borderRadius: "20px",
     border: `1px solid ${active ? "#F59E0B" : "#2A2A30"}`,
     background: active ? "#2A1A00" : "#1A1A1F",
-    color: active ? "#FCD34D" : "#888578",
+    color: active ? "#FCD34D" : "#B8B2A8",
     cursor: "pointer" as const, transition: "all 0.15s", fontWeight: active ? 500 : 400,
   }),
   purpleTag: (active: boolean) => ({
     fontSize: "12px", padding: "5px 12px", borderRadius: "20px",
     border: `1px solid ${active ? "#A855F7" : "#2A2A30"}`,
     background: active ? "#1A1020" : "#1A1A1F",
-    color: active ? "#A855F7" : "#888578",
+    color: active ? "#A855F7" : "#B8B2A8",
     cursor: "pointer" as const, transition: "all 0.15s", fontWeight: active ? 500 : 400,
   }),
 };
@@ -338,7 +338,7 @@ export default function Home() {
                 {heroStyle.toLowerCase()} track
               </span>
             </div>
-            <div style={{ fontSize: "13px", color: "#5C526D", marginTop: "10px", lineHeight: 1.4 }}>
+            <div style={{ fontSize: "13px", color: "#8C829D", marginTop: "10px", lineHeight: 1.4 }}>
               Select style, set parameters, generate.
             </div>
 
@@ -346,7 +346,7 @@ export default function Home() {
             <div style={{ display: "flex", gap: "5px", marginTop: "10px", flexWrap: "wrap" as const }}>
               {MOOD_PRESETS.map(p => (
                 <button key={p.label} onClick={() => { setKey(p.key); setTempo(p.tempo); setIntensity(p.intensity); setActiveStyles(p.styles); }}
-                  style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "20px", border: "1px solid #2A1F3A", background: "#1A1020", color: "#888578", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                  style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "20px", border: "1px solid #2A1F3A", background: "#1A1020", color: "#B8B2A8", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                   {p.icon} {p.label}
                 </button>
               ))}
@@ -354,13 +354,13 @@ export default function Home() {
 
             {/* Inspire + Random */}
             <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
-              <button onClick={inspire} disabled={inspireLoading} style={{ flex: 1, padding: "8px 14px", background: inspireLoading ? "#1A1020" : "#1A1020", border: `1px solid ${inspireLoading ? "#3B1F6A" : "#A855F7"}`, borderRadius: "8px", color: inspireLoading ? "#5C526D" : "#A855F7", fontSize: "12px", fontWeight: 500, cursor: inspireLoading ? "not-allowed" : "pointer", letterSpacing: "0.06em", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s" }}>
+              <button onClick={inspire} disabled={inspireLoading} style={{ flex: 1, padding: "8px 14px", background: inspireLoading ? "#1A1020" : "#1A1020", border: `1px solid ${inspireLoading ? "#3B1F6A" : "#A855F7"}`, borderRadius: "8px", color: inspireLoading ? "#8C829D" : "#A855F7", fontSize: "12px", fontWeight: 500, cursor: inspireLoading ? "not-allowed" : "pointer", letterSpacing: "0.06em", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s" }}>
                 {inspireLoading ? "Generating..." : "✶ Inspire Me"}
               </button>
               <button onClick={randomizeAll} title="Randomize everything"
-                style={{ padding: "8px 12px", background: "#1A1020", border: "1px solid #2A1F3A", borderRadius: "8px", color: "#888578", fontSize: "16px", cursor: "pointer", transition: "all 0.2s" }}
+                style={{ padding: "8px 12px", background: "#1A1020", border: "1px solid #2A1F3A", borderRadius: "8px", color: "#B8B2A8", fontSize: "16px", cursor: "pointer", transition: "all 0.2s" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "#A855F7"; e.currentTarget.style.color = "#A855F7"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#2A1F3A"; e.currentTarget.style.color = "#888578"; }}>
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#2A1F3A"; e.currentTarget.style.color = "#B8B2A8"; }}>
                 🎲
               </button>
             </div>
@@ -383,10 +383,10 @@ export default function Home() {
                 return (
                   <div key={cat.id} style={{ position: "relative" }}>
                     <div style={{ display: "flex", borderRadius: "20px", border: `1px solid ${active ? activeBorder : "#2A2A30"}`, background: active ? activeBg : "#1A1A1F", overflow: "hidden", transition: "all 0.15s" }}>
-                      <button onClick={() => { toggleStyle(cat.label); setOpenCat(null); }} style={{ flex: 1, fontSize: "12px", padding: "6px 4px 6px 10px", background: "transparent", border: "none", color: active ? activeText : "#888578", cursor: "pointer", textAlign: "left" as const, fontWeight: active ? 500 : 400, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <button onClick={() => { toggleStyle(cat.label); setOpenCat(null); }} style={{ flex: 1, fontSize: "12px", padding: "6px 4px 6px 10px", background: "transparent", border: "none", color: active ? activeText : "#B8B2A8", cursor: "pointer", textAlign: "left" as const, fontWeight: active ? 500 : 400, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
                         {cat.label}
                       </button>
-                      <button onClick={() => setOpenCat(isOpen ? null : cat.id)} style={{ width: "22px", background: "transparent", border: "none", borderLeft: `1px solid ${active ? activeBorder : "#2A2A30"}`, color: active ? activeColor : "#555", cursor: "pointer", fontSize: "9px", display: "flex", alignItems: "center", justifyContent: "center", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}>
+                      <button onClick={() => setOpenCat(isOpen ? null : cat.id)} style={{ width: "22px", background: "transparent", border: "none", borderLeft: `1px solid ${active ? activeBorder : "#2A2A30"}`, color: active ? activeColor : "#888", cursor: "pointer", fontSize: "9px", display: "flex", alignItems: "center", justifyContent: "center", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}>
                         ▾
                       </button>
                     </div>
@@ -395,7 +395,7 @@ export default function Home() {
                         {cat.subs.map((sub, idx) => {
                           const subActive = activeStyles.includes(sub);
                           return (
-                            <button key={sub} onClick={() => toggleStyle(sub)} style={{ display: "block", width: "100%", textAlign: "left" as const, padding: "7px 12px", background: subActive ? (v === "purple" ? "#1A1428" : "#1A1000") : "transparent", border: "none", borderBottom: idx < cat.subs.length - 1 ? "1px solid #2A2035" : "none", color: subActive ? (v === "purple" ? "#C084FC" : "#FCD34D") : "#888578", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                            <button key={sub} onClick={() => toggleStyle(sub)} style={{ display: "block", width: "100%", textAlign: "left" as const, padding: "7px 12px", background: subActive ? (v === "purple" ? "#1A1428" : "#1A1000") : "transparent", border: "none", borderBottom: idx < cat.subs.length - 1 ? "1px solid #2A2035" : "none", color: subActive ? (v === "purple" ? "#C084FC" : "#FCD34D") : "#B8B2A8", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                               {sub}
                             </button>
                           );
@@ -432,12 +432,12 @@ export default function Home() {
             <div style={{ padding: "0 12px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <div style={{ fontSize: "11px", letterSpacing: "0.12em", color: "var(--purple-dim)", textTransform: "uppercase" as const, fontWeight: 500 }}>Style Combos</div>
-                <button onClick={findCombos} disabled={combosLoading} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "6px", border: `1px solid ${combosLoading ? "#2A2A30" : "#A855F7"}`, background: combosLoading ? "#1A1A1F" : "#1A1020", color: combosLoading ? "#5C526D" : "#A855F7", cursor: combosLoading ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                <button onClick={findCombos} disabled={combosLoading} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "6px", border: `1px solid ${combosLoading ? "#2A2A30" : "#A855F7"}`, background: combosLoading ? "#1A1A1F" : "#1A1020", color: combosLoading ? "#8C829D" : "#A855F7", cursor: combosLoading ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                   {combosLoading ? "Finding..." : `✶ Find for ${activeStyles[0]}`}
                 </button>
               </div>
               {combos.length === 0 && !combosLoading && (
-                <div style={{ fontSize: "11px", color: "#444", fontStyle: "italic", textAlign: "center" as const, padding: "12px 0" }}>Pick a style, then click Find</div>
+                <div style={{ fontSize: "11px", color: "#777", fontStyle: "italic", textAlign: "center" as const, padding: "12px 0" }}>Pick a style, then click Find</div>
               )}
               {combosLoading && (
                 <div style={{ fontSize: "11px", color: "var(--purple-dim)", textAlign: "center" as const, padding: "12px 0" }}>
@@ -452,7 +452,7 @@ export default function Home() {
                     const label = combo.label || (typeof combo === "string" ? combo : "");
                     const icon = combo.icon || "";
                     return (
-                      <button key={label} onClick={() => comboStyles.length > 0 && setActiveStyles(comboStyles)} style={{ fontSize: "11px", padding: "7px 8px", borderRadius: "8px", border: `1px solid ${isActive ? "#A855F7" : "#2A2A30"}`, background: isActive ? "#1A1020" : "#1A1A1F", color: isActive ? "#A855F7" : "#888578", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textAlign: "left" as const }}>
+                      <button key={label} onClick={() => comboStyles.length > 0 && setActiveStyles(comboStyles)} style={{ fontSize: "11px", padding: "7px 8px", borderRadius: "8px", border: `1px solid ${isActive ? "#A855F7" : "#2A2A30"}`, background: isActive ? "#1A1020" : "#1A1A1F", color: isActive ? "#A855F7" : "#B8B2A8", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textAlign: "left" as const }}>
                         <div style={{ marginBottom: "2px" }}>{icon} {label}</div>
                         <div style={{ fontSize: "10px", opacity: 0.6, lineHeight: 1.3 }}>{comboStyles.join(" · ")}</div>
                       </button>
@@ -525,9 +525,9 @@ export default function Home() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
                   <div style={s.paramLabel}>Theme / Scene</div>
                   <button onClick={randomTheme} disabled={randomLoading} title="Random theme"
-                    style={{ background: "none", border: "1px solid #2A2A30", borderRadius: "6px", color: randomLoading ? "#5C526D" : "#888578", fontSize: "14px", cursor: randomLoading ? "not-allowed" : "pointer", padding: "2px 8px", lineHeight: 1 }}
+                    style={{ background: "none", border: "1px solid #2A2A30", borderRadius: "6px", color: randomLoading ? "#8C829D" : "#B8B2A8", fontSize: "14px", cursor: randomLoading ? "not-allowed" : "pointer", padding: "2px 8px", lineHeight: 1 }}
                     onMouseEnter={e => { if (!randomLoading) { e.currentTarget.style.borderColor = "#A855F7"; e.currentTarget.style.color = "#A855F7"; } }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#2A2A30"; e.currentTarget.style.color = randomLoading ? "#5C526D" : "#888578"; }}>
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#2A2A30"; e.currentTarget.style.color = randomLoading ? "#8C829D" : "#B8B2A8"; }}>
                     {randomLoading ? "⟳" : "\u{1F3B2}"}
                   </button>
                 </div>
@@ -539,7 +539,7 @@ export default function Home() {
                 <div style={s.paramLabel}>Import Preset</div>
                 <div style={{ display: "flex", gap: "6px" }}>
                   <textarea value={importText} onChange={e => setImportText(e.target.value)} placeholder="Paste any Suno preset, description, or idea..." style={{ flex: 1, height: "56px", background: "#141418", border: "1px solid #2A1F3A", borderRadius: "8px", padding: "8px 12px", color: "var(--text-secondary)", fontSize: "12px", resize: "none" as const, outline: "none", fontFamily: "'DM Mono', monospace", lineHeight: "1.5", boxSizing: "border-box" as const }} />
-                  <button onClick={importPreset} disabled={importLoading || !importText.trim()} style={{ padding: "0 14px", borderRadius: "8px", border: "none", background: importDone ? "#2D1B69" : importLoading || !importText.trim() ? "#1A1A1F" : "#A855F7", color: importDone ? "#C084FC" : importLoading || !importText.trim() ? "#5C526D" : "#0D0D0F", fontSize: "12px", fontWeight: 600, cursor: importLoading || !importText.trim() ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" as const }}>
+                  <button onClick={importPreset} disabled={importLoading || !importText.trim()} style={{ padding: "0 14px", borderRadius: "8px", border: "none", background: importDone ? "#2D1B69" : importLoading || !importText.trim() ? "#1A1A1F" : "#A855F7", color: importDone ? "#C084FC" : importLoading || !importText.trim() ? "#8C829D" : "#0D0D0F", fontSize: "12px", fontWeight: 600, cursor: importLoading || !importText.trim() ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" as const }}>
                     {importDone ? "Done ✓" : importLoading ? "..." : "Import ↗"}
                   </button>
                 </div>
@@ -551,7 +551,7 @@ export default function Home() {
                 <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "5px" }}>
                   {INSTRUMENTS.map(i => <button key={i} onClick={() => toggleInstrument(i)} style={s.tag(instruments.includes(i))}>{i}</button>)}
                 </div>
-                <div style={{ fontSize: "10px", color: "#5C526D", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginTop: "8px", marginBottom: "6px", fontWeight: 500 }}>World & Exotic</div>
+                <div style={{ fontSize: "10px", color: "#8C829D", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginTop: "8px", marginBottom: "6px", fontWeight: 500 }}>World & Exotic</div>
                 <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "5px" }}>
                   {EXOTIC_INSTRUMENTS.map(i => <button key={i} onClick={() => toggleInstrument(i)} style={s.amberTag(instruments.includes(i))}>{i}</button>)}
                 </div>
@@ -598,10 +598,10 @@ export default function Home() {
           {/* Bottom bar */}
           <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", display: "flex", gap: "8px" }}>
             <button onClick={() => { if (result) saveDraft({ title: compositionTitle || "Untitled", styles: activeStyles, outputType: vocalStyle, result, key, tempo, intensity, language, trackMode, instruments, mood: INTENSITY_LABELS[intensity], theme }); }} disabled={!result}
-              style={{ padding: "10px 16px", background: "transparent", border: "1px solid var(--border)", borderRadius: "6px", color: result ? "#888578" : "#5C526D", fontSize: "12px", cursor: result ? "pointer" : "not-allowed" }}>
+              style={{ padding: "10px 16px", background: "transparent", border: "1px solid var(--border)", borderRadius: "6px", color: result ? "#B8B2A8" : "#8C829D", fontSize: "12px", cursor: result ? "pointer" : "not-allowed" }}>
               Save Draft
             </button>
-            <button onClick={generate} disabled={loading || isStreaming} style={{ flex: 1, padding: "10px", background: loading || isStreaming ? "#1A1020" : "#A855F7", border: "none", borderRadius: "6px", color: loading || isStreaming ? "#5C526D" : "#0D0D0F", fontSize: "13px", fontWeight: 600, cursor: loading || isStreaming ? "not-allowed" : "pointer", letterSpacing: "0.04em", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s" }}>
+            <button onClick={generate} disabled={loading || isStreaming} style={{ flex: 1, padding: "10px", background: loading || isStreaming ? "#1A1020" : "#A855F7", border: "none", borderRadius: "6px", color: loading || isStreaming ? "#8C829D" : "#0D0D0F", fontSize: "13px", fontWeight: 600, cursor: loading || isStreaming ? "not-allowed" : "pointer", letterSpacing: "0.04em", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s" }}>
               {loading || isStreaming ? "Generating..." : "Forge Track ↗"}
             </button>
           </div>
