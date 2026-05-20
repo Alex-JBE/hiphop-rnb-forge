@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const userPrompt = buildCoverArtPrompt({ title, style, mood, theme, composition });
 
     const stream = await anthropic.messages.stream({
-      model: "claude-sonnet-4-5",
+      model: "claude-sonnet-4-6",
       max_tokens: 2048,
       system: COVER_ART_DIRECTOR_SYSTEM,
       messages: [{ role: "user", content: userPrompt }],
