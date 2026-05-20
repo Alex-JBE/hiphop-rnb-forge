@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { HIPHOP_RNB_SYSTEM_PROMPT } from "@/prompts/base-prompt";
 
-function buildPrompt(params: {
+function buildUserPrompt(params: {
   title?: string;
   styles: string[];
   key?: string;
@@ -42,9 +43,7 @@ function buildPrompt(params: {
   const styleList = styles.join(", ");
   const isVocal = trackMode === "vocals";
 
-  let prompt = `You are a world-class hip-hop & R&B music producer and composer.
-
-Create a COMPLETE, DETAILED, PRODUCTION-READY composition blueprint for the following track.
+  return `Create a COMPLETE, DETAILED, PRODUCTION-READY composition blueprint for the following track.
 
 PARAMETERS:
 - Genre / Style: ${styleList}
@@ -86,8 +85,6 @@ ${isVocal ? `VOCAL ARRANGEMENT:
 <Complete lyrics in ${language} with section markers: [Intro], [Verse 1], [Chorus/Hook], [Verse 2], [Bridge], [Outro]>
 ` : ""}PRODUCTION NOTES:
 <Branch-specific guidance, mixing red flags, production polish tips, reference tracks>`;
-
-  return prompt;
 }
 
 export async function POST(req: NextRequest) {
@@ -95,23 +92,27 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const prompt = buildPrompt(body);
+    const userPrompt = buildUserPrompt(body);
 
     const stream = await anthropic.messages.stream({
       model: "claude-sonnet-4-6",
       max_tokens: 8192,
-      messages: [{ role: "user", content: prompt }],
+      system: [{ type: "text" as const, text: HIPHOP_RNB_SYSTEM_PROMPT, cache_control: { type: "ephemeral" as const } }],
+      messages: [{ role: "user", content: userPrompt }],
     });
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
-        for await (const chunk of stream) {
-          if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(chunk.delta.text));
+        try {
+          for await (const chunk of stream) {
+            if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
+              controller.enqueue(encoder.encode(chunk.delta.text));
+            }
           }
+        } finally {
+          controller.close();
         }
-        controller.close();
       },
     });
 
@@ -119,11 +120,4 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Transfer-Encoding": "chunked",
-        "X-Accel-Buffering": "no",
-      },
-    });
-  } catch (e) {
-    console.error(e);
-    return new Response(JSON.stringify({ error: "Generation failed" }), { status: 500 });
-  }
-}
+        "X-Accel
