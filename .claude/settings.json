@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{"type": "command", "command": "npx tsc --noEmit --pretty 2>&1 | head -30"}]
+    }],
+    "PreToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{"type": "command", "command": "node -e \"if(process.env.CLAUDE_TOOL_INPUT?.includes('.env')) { console.error('Blocked: .env edit requires confirmation'); process.exit(1); }\""}]
+    }]
+  }
+}
