@@ -3,7 +3,7 @@ import { useState } from "react";
 import { exportAllTXT, exportAllPDF, exportCopyrightPackage } from "@/lib/export";
 
 type ViewMode = "composition" | "suno";
-type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number };
+type SunoPrompt = { title: string; styleBlock: string; lyricsBlock: string; updatedAt: number };
 
 interface HeaderProps {
   title: string;
@@ -62,7 +62,11 @@ export default function Header({ title, composition, coverResult, videoResult, v
 
   function copyAll() {
     if (!sunoPrompt) return;
-    copyToClipboard(`STYLE OF MUSIC:\n${sunoPrompt.styleBlock}\n\nLYRICS:\n${sunoPrompt.lyricsBlock}`);
+    const parts: string[] = [];
+    if (sunoPrompt.title) parts.push(`TITLE\n${sunoPrompt.title}`);
+    parts.push(`STYLE OF MUSIC:\n${sunoPrompt.styleBlock}`);
+    if (sunoPrompt.lyricsBlock) parts.push(`LYRICS:\n${sunoPrompt.lyricsBlock}`);
+    copyToClipboard(parts.join("\n\n"));
     setCopied("all");
     setTimeout(() => setCopied(null), 1500);
   }
@@ -148,13 +152,13 @@ export default function Header({ title, composition, coverResult, videoResult, v
                 </div>
               )}
               <button onClick={() => {
-                const comp = composition || (sunoPrompt ? `STYLE OF MUSIC:\n${sunoPrompt.styleBlock}${sunoPrompt.lyricsBlock ? `\n\nLYRICS:\n${sunoPrompt.lyricsBlock}` : ""}` : "");
+                const comp = composition || (sunoPrompt ? [sunoPrompt.title ? `TITLE\n${sunoPrompt.title}` : "", `STYLE OF MUSIC:\n${sunoPrompt.styleBlock}`, sunoPrompt.lyricsBlock ? `LYRICS:\n${sunoPrompt.lyricsBlock}` : ""].filter(Boolean).join("\n\n") : "");
                 exportAllTXT(title, comp, coverResult, videoResult);
               }} style={{ padding: "6px 14px", background: "transparent", border: "1px solid #888578", borderRadius: "6px", color: "#F0EDE6", fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>
                 Export All TXT
               </button>
               <button onClick={() => {
-                const comp = composition || (sunoPrompt ? `STYLE OF MUSIC:\n${sunoPrompt.styleBlock}${sunoPrompt.lyricsBlock ? `\n\nLYRICS:\n${sunoPrompt.lyricsBlock}` : ""}` : "");
+                const comp = composition || (sunoPrompt ? [sunoPrompt.title ? `TITLE\n${sunoPrompt.title}` : "", `STYLE OF MUSIC:\n${sunoPrompt.styleBlock}`, sunoPrompt.lyricsBlock ? `LYRICS:\n${sunoPrompt.lyricsBlock}` : ""].filter(Boolean).join("\n\n") : "");
                 exportAllPDF(title, comp, coverResult, videoResult);
               }} style={{ padding: "6px 14px", background: "var(--border-purple)", border: "1px solid var(--purple-dim)", borderRadius: "6px", color: "var(--purple-light)", fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>
                 Export All PDF
@@ -221,10 +225,23 @@ export default function Header({ title, composition, coverResult, videoResult, v
               </div>
             </div>
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "16px 20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              {sunoPrompt.title && (
+                <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", flexShrink: 0 }}>
+                  <div style={{ padding: "8px 14px", background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "10px", color: "#A855F7", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Block 1 — Title</span>
+                    <button onClick={() => copy(sunoPrompt.title, "title")} style={{ fontSize: "11px", padding: "3px 10px", background: copied === "title" ? "#1A1020" : "transparent", border: `1px solid ${copied === "title" ? "#A855F7" : "#888578"}`, borderRadius: "4px", color: copied === "title" ? "#C084FC" : "#F0EDE6", cursor: "pointer" }}>
+                      {copied === "title" ? "Copied ✓" : "Copy"}
+                    </button>
+                  </div>
+                  <div style={{ padding: "12px 14px", fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.7", fontFamily: "'DM Mono', monospace", background: "var(--bg-card)" }}>
+                    {sunoPrompt.title}
+                  </div>
+                </div>
+              )}
               {sunoPrompt.styleBlock && (
                 <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", flexShrink: 0 }}>
                   <div style={{ padding: "8px 14px", background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: "10px", color: "#A855F7", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Block 1 — Style of Music</span>
+                    <span style={{ fontSize: "10px", color: "#A855F7", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Block 2 — Style of Music</span>
                     <button onClick={() => copy(sunoPrompt.styleBlock, "style")} style={{ fontSize: "11px", padding: "3px 10px", background: copied === "style" ? "#1A1020" : "transparent", border: `1px solid ${copied === "style" ? "#A855F7" : "#888578"}`, borderRadius: "4px", color: copied === "style" ? "#C084FC" : "#F0EDE6", cursor: "pointer" }}>
                       {copied === "style" ? "Copied ✓" : "Copy"}
                     </button>
@@ -237,7 +254,7 @@ export default function Header({ title, composition, coverResult, videoResult, v
               {sunoPrompt.lyricsBlock && (
                 <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", flexShrink: 0 }}>
                   <div style={{ padding: "8px 14px", background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: "10px", color: "#A855F7", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Block 2 — Lyrics</span>
+                    <span style={{ fontSize: "10px", color: "#A855F7", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Block 3 — Lyrics</span>
                     <button onClick={() => copy(sunoPrompt.lyricsBlock, "lyrics")} style={{ fontSize: "11px", padding: "3px 10px", background: copied === "lyrics" ? "#1A1020" : "transparent", border: `1px solid ${copied === "lyrics" ? "#A855F7" : "#888578"}`, borderRadius: "4px", color: copied === "lyrics" ? "#C084FC" : "#F0EDE6", cursor: "pointer" }}>
                       {copied === "lyrics" ? "Copied ✓" : "Copy"}
                     </button>

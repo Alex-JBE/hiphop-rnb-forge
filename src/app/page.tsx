@@ -78,7 +78,7 @@ const VOCAL_STYLES = [
 
 type TrackMode = "vocal" | "instrumental";
 type ViewMode = "composition" | "suno";
-type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number };
+type SunoPrompt = { title: string; styleBlock: string; lyricsBlock: string; updatedAt: number };
 
 // ─── Style helpers ─────────────────────────────────────────────────────────────
 
@@ -116,6 +116,21 @@ function getVariantForStyle(st: string): "purple" | "amber" {
   return cat?.variant ?? "purple";
 }
 
+function deriveTitleFromTheme(theme: string): string {
+  if (!theme.trim()) return "";
+  const cleaned = theme
+    .replace(/["""''`]/g, "")
+    .replace(/[,.:;!?|*<>\\/]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = cleaned.split(" ").filter(Boolean).slice(0, 5);
+  if (!words.length) return "";
+  return words
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
+    .slice(0, 60);
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -150,7 +165,9 @@ export default function Home() {
 
   const { drafts, saveDraft, deleteDraft, toggleStar } = useDrafts();
   const styleBlockRef = useRef<HTMLDivElement>(null);
-  const compositionTitle = result.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim() || "";
+  const themeTitle = deriveTitleFromTheme(theme);
+  const resultTitle = result.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim();
+  const compositionTitle = themeTitle || resultTitle || "";
   const instrumental = trackMode === "instrumental";
 
   useEffect(() => {
@@ -379,6 +396,7 @@ export default function Home() {
       }
 
       setSunoPrompt({
+        title: compositionTitle,
         styleBlock,
         lyricsBlock,
         updatedAt: Date.now(),
@@ -706,13 +724,13 @@ export default function Home() {
             <button
               onClick={() => {
                 if (result) {
-                  saveDraft({ title: compositionTitle || "Untitled", styles: activeStyles, outputType: vocalStyle, result, key, tempo, intensity, language, trackMode, instruments, mood: INTENSITY_LABELS[intensity], theme });
+                  saveDraft({ title: compositionTitle, styles: activeStyles, outputType: vocalStyle, result, key, tempo, intensity, language, trackMode, instruments, mood: INTENSITY_LABELS[intensity], theme });
                 } else if (sunoPrompt) {
                   const sunoText = [sunoPrompt.styleBlock, sunoPrompt.lyricsBlock].filter(Boolean).join("\n\n").trim();
-                  saveDraft({ title: activeStyles.join(" + ") || "Untitled", styles: activeStyles, outputType: "suno", result: sunoText, key, tempo, intensity, language, trackMode, instruments, mood: INTENSITY_LABELS[intensity], theme });
+                  saveDraft({ title: compositionTitle, styles: activeStyles, outputType: "suno", result: sunoText, key, tempo, intensity, language, trackMode, instruments, mood: INTENSITY_LABELS[intensity], theme });
                 }
               }}
-              disabled={!result && !sunoPrompt}
+              disabled={(!result && !sunoPrompt) || !compositionTitle.trim()}
               title="Save to history"
               style={{
                 padding: "10px 12px",
@@ -726,7 +744,7 @@ export default function Home() {
                 transition: "all 0.2s",
               }}
             >
-              Save
+              Save Draft
             </button>
             <button
               onClick={buildSunoPrompt}
