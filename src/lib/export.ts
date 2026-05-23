@@ -28,12 +28,11 @@ export function exportAllTXT(
   if (videoResult) {
     text += `VIDEO SCRIPT\n${"─".repeat(40)}\n${videoResult}\n`;
   }
-  const resolvedTitle = title || composition.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim() || "hiphop-rnb-forge";
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${sanitizeFilename(resolvedTitle)}-full.txt`;
+  a.download = buildFilename(title, composition, "-full", "txt");
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -148,6 +147,20 @@ export function exportCopyrightPackage(
   a.download = `${sanitizeFilename(title || "hiphop-rnb-forge")}-copyright.txt`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function buildFilename(title: string, composition: string, suffix: string, ext: string): string {
+  const raw = title ||
+    composition.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim() ||
+    "hiphop-rnb-forge";
+  const slug = raw
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim()
+    .slice(0, 80) || "hiphop-rnb-forge";
+  return `${slug}${suffix}.${ext}`;
 }
 
 function sanitizeFilename(value: string): string {
@@ -379,5 +392,5 @@ export async function exportAllPDF(
   if (coverResult) { parts.push(sectionDivider("Cover Art Prompts")); parts.push(formatContent(coverResult)); }
   if (videoResult) { parts.push(sectionDivider("Video Script")); parts.push(formatContent(videoResult)); }
   if (parts.length === 0) { alert("Nothing to export."); return; }
-  await renderToPDF(title || "Untitled", parts.join("\n"), `${sanitizeFilename(title || "hiphop-rnb-forge")}-full.pdf`);
+  await renderToPDF(title || "Untitled", parts.join("\n"), buildFilename(title, composition, "-full", "pdf"));
 }
