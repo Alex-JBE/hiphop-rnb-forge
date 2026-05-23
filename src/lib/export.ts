@@ -28,11 +28,12 @@ export function exportAllTXT(
   if (videoResult) {
     text += `VIDEO SCRIPT\n${"─".repeat(40)}\n${videoResult}\n`;
   }
+  const resolvedTitle = title || composition.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim() || "hiphop-rnb-forge";
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${sanitizeFilename(title || "hiphop-rnb-forge")}-full.txt`;
+  a.download = `${sanitizeFilename(resolvedTitle)}-full.txt`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -347,7 +348,13 @@ async function renderToPDF(title: string, htmlContent: string, filename: string)
       sourceY += pageHeightInCanvas;
     }
 
-    pdf.save(filename);
+    const pdfBlob = pdf.output("blob");
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const pdfLink = document.createElement("a");
+    pdfLink.href = pdfUrl;
+    pdfLink.download = filename;
+    pdfLink.click();
+    URL.revokeObjectURL(pdfUrl);
   } catch (error) {
     console.error(error);
     alert("PDF export failed.");
