@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { exportTXT } from "@/lib/export";
 
 type ViewMode = "composition" | "suno";
-type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number; title: string };
+type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number };
 
 interface ResultPanelProps {
   result: string;
@@ -274,12 +274,6 @@ export default function ResultPanel({ result, loading, isStreaming, sunoPrompt, 
     return (
       <div style={rootStyle}>
         <div style={{ padding: "16px" }}>
-          {sunoPrompt.title && (
-            <div style={{ padding: "10px 14px", background: "#1A1020", border: "1px solid #3A2A50", borderRadius: "8px", marginBottom: "10px" }}>
-              <span style={{ fontSize: "10px", color: "var(--purple)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginRight: "10px" }}>Title</span>
-              <span style={{ fontSize: "13px", color: "var(--text-primary)", fontWeight: 500 }}>{sunoPrompt.title}</span>
-            </div>
-          )}
           <SunoCopyBlock label="Style of Music" content={sunoPrompt.styleBlock} />
           {sunoPrompt.lyricsBlock
             ? <SunoCopyBlock label="Lyrics" content={sunoPrompt.lyricsBlock} monospace />

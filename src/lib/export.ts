@@ -361,7 +361,7 @@ async function renderToPDF(title: string, htmlContent: string, filename: string)
       sourceY += pageHeightInCanvas;
     }
 
-    const pdfBlob = pdf.output("blob");
+    const pdfBlob = new Blob([pdf.output("arraybuffer")], { type: "application/octet-stream" });
     const pdfUrl = URL.createObjectURL(pdfBlob);
     const pdfLink = document.createElement("a");
     pdfLink.href = pdfUrl;

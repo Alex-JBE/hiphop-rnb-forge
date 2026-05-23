@@ -77,7 +77,7 @@ const VOCAL_STYLES = [
 
 type TrackMode = "vocal" | "instrumental";
 type ViewMode = "composition" | "suno";
-type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number; title: string };
+type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number };
 
 // ─── Style helpers ─────────────────────────────────────────────────────────────
 
@@ -304,38 +304,72 @@ export default function Home() {
   }
 
   async function buildSunoPrompt() {
+    if (!result && !theme && !activeStyles.length) {
+      setSunoPromptError(true);
+      setViewMode("composition");
+      return;
+    }
+
     setSunoPromptLoading(true);
     setSunoPrompt(null);
     setSunoPromptError(false);
     setViewMode("suno");
+
     try {
       const brief = result || [
         `Hip-hop & R&B track in ${activeStyles.join(" + ")} style`,
-        `Key: ${key}`, `Tempo: ${tempo}`,
+        `Key: ${key}`,
+        `Tempo: ${tempo}`,
         `Intensity: ${INTENSITY_LABELS[intensity]}`,
         `Instruments: ${instruments.join(", ")}`,
         language !== "English" ? `Language: ${language}` : null,
         theme ? `Theme: ${theme}` : null,
       ].filter(Boolean).join(". ");
+
       const res = await fetch("/api/suno", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ composition: brief, title: compositionTitle || "Hip-Hop Track", trackLength: "medium", vocal: trackMode === "vocal" ? vocalStyle : "" }),
+        body: JSON.stringify({
+          composition: brief,
+          title: compositionTitle || "Hip-Hop Track",
+          trackLength: "medium",
+          vocal: trackMode === "vocal" ? vocalStyle : "",
+        }),
       });
-      if (!res.ok || !res.body) { setSunoPromptError(true); return; }
+
+      if (!res.ok || !res.body) {
+        setSunoPromptError(true);
+        return;
+      }
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         acc += decoder.decode(value, { stream: true });
       }
-      const styleBlock = acc.match(/STYLE_OF_MUSIC:\s*([\s\S]*?)(?=LYRICS:|$)/)?.[1]?.trim() ?? "";
-      const lyricsBlock = acc.match(/LYRICS:\s*([\s\S]*?)$/)?.[1]?.trim() ?? "";
-      if (!styleBlock) { setSunoPromptError(true); return; }
-      setSunoPrompt({ styleBlock, lyricsBlock, updatedAt: Date.now(), title: compositionTitle || theme || "" });
-    } catch {
+
+      const styleBlockMatch = acc.match(/STYLE_OF_MUSIC:\s*([\s\S]*?)(?=LYRICS:|$)/);
+      const lyricsBlockMatch = acc.match(/LYRICS:\s*([\s\S]*?)$/);
+
+      const styleBlock = styleBlockMatch?.[1]?.trim() ?? "";
+      const lyricsBlock = lyricsBlockMatch?.[1]?.trim() ?? "";
+
+      if (!styleBlock) {
+        setSunoPromptError(true);
+        return;
+      }
+
+      setSunoPrompt({
+        styleBlock,
+        lyricsBlock,
+        updatedAt: Date.now(),
+      });
+    } catch (e) {
+      console.error("Suno build failed", e);
       setSunoPromptError(true);
     } finally {
       setSunoPromptLoading(false);
