@@ -8,6 +8,7 @@ import ResultPanel from "@/components/ResultPanel";
 import DraftsPanel from "@/components/DraftsPanel";
 import { useDrafts } from "@/lib/useDrafts";
 import { exportTXT } from "@/lib/export";
+import { buildPromptParts } from "@/prompts/base-prompt";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
@@ -277,15 +278,20 @@ export default function Home() {
     setResult(""); setCoverResult(""); setVideoResult("");
     setViewMode("composition");
     try {
+      const { system, user } = buildPromptParts({
+        branch: activeStyles.join(" + "),
+        groove: tempo,
+        texture: key,
+        mood: INTENSITY_LABELS[intensity],
+        voiceMode: trackMode === "vocal" ? vocalStyle : "Instrumental",
+        theme,
+        instruments,
+        language,
+      });
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          styles: activeStyles, key, tempo, intensity,
-          instruments, language, theme, trackMode,
-          vocalTone: trackMode === "vocal" ? vocalStyle : "",
-          notes: "",
-        }),
+        body: JSON.stringify({ prompt: user, system }),
       });
       if (!res.ok) {
         const errText = await res.text().catch(() => `HTTP ${res.status}`);
