@@ -366,8 +366,11 @@ async function renderToPDF(title: string, htmlContent: string, filename: string)
     const pdfLink = document.createElement("a");
     pdfLink.href = pdfUrl;
     pdfLink.download = filename;
+    pdfLink.style.display = "none";
+    document.body.appendChild(pdfLink);
     pdfLink.click();
-    URL.revokeObjectURL(pdfUrl);
+    document.body.removeChild(pdfLink);
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 150);
   } catch (error) {
     console.error(error);
     alert("PDF export failed.");
