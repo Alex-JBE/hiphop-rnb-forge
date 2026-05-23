@@ -77,7 +77,7 @@ const VOCAL_STYLES = [
 
 type TrackMode = "vocal" | "instrumental";
 type ViewMode = "composition" | "suno";
-type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number };
+type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number; title: string };
 
 // ─── Style helpers ─────────────────────────────────────────────────────────────
 
@@ -334,7 +334,7 @@ export default function Home() {
       const styleBlock = acc.match(/STYLE_OF_MUSIC:\s*([\s\S]*?)(?=LYRICS:|$)/)?.[1]?.trim() ?? "";
       const lyricsBlock = acc.match(/LYRICS:\s*([\s\S]*?)$/)?.[1]?.trim() ?? "";
       if (!styleBlock) { setSunoPromptError(true); return; }
-      setSunoPrompt({ styleBlock, lyricsBlock, updatedAt: Date.now() });
+      setSunoPrompt({ styleBlock, lyricsBlock, updatedAt: Date.now(), title: compositionTitle || theme || "" });
     } catch {
       setSunoPromptError(true);
     } finally {
