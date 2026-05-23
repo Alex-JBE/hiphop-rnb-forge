@@ -3,7 +3,7 @@ import { useState } from "react";
 import { exportAllTXT, exportAllPDF, exportCopyrightPackage } from "@/lib/export";
 
 type ViewMode = "composition" | "suno";
-type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number; title: string };
+type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number };
 
 interface HeaderProps {
   title: string;
@@ -149,13 +149,13 @@ export default function Header({ title, composition, coverResult, videoResult, v
               )}
               <button onClick={() => {
                 const comp = composition || (sunoPrompt ? `STYLE OF MUSIC:\n${sunoPrompt.styleBlock}${sunoPrompt.lyricsBlock ? `\n\nLYRICS:\n${sunoPrompt.lyricsBlock}` : ""}` : "");
-                exportAllTXT(sunoPrompt?.title || title, comp, coverResult, videoResult);
+                exportAllTXT(title, comp, coverResult, videoResult);
               }} style={{ padding: "6px 14px", background: "transparent", border: "1px solid #888578", borderRadius: "6px", color: "#F0EDE6", fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>
                 Export All TXT
               </button>
               <button onClick={() => {
                 const comp = composition || (sunoPrompt ? `STYLE OF MUSIC:\n${sunoPrompt.styleBlock}${sunoPrompt.lyricsBlock ? `\n\nLYRICS:\n${sunoPrompt.lyricsBlock}` : ""}` : "");
-                exportAllPDF(sunoPrompt?.title || title, comp, coverResult, videoResult);
+                exportAllPDF(title, comp, coverResult, videoResult);
               }} style={{ padding: "6px 14px", background: "var(--border-purple)", border: "1px solid var(--purple-dim)", borderRadius: "6px", color: "var(--purple-light)", fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>
                 Export All PDF
               </button>
@@ -221,12 +221,6 @@ export default function Header({ title, composition, coverResult, videoResult, v
               </div>
             </div>
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "16px 20px", display: "flex", flexDirection: "column", gap: "16px" }}>
-              {sunoPrompt.title && (
-                <div style={{ padding: "10px 14px", background: "#1A1020", border: "1px solid #3A2A50", borderRadius: "8px", flexShrink: 0 }}>
-                  <span style={{ fontSize: "10px", color: "#A855F7", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginRight: "10px" }}>Title</span>
-                  <span style={{ fontSize: "13px", color: "var(--text-primary)", fontWeight: 500 }}>{sunoPrompt.title}</span>
-                </div>
-              )}
               {sunoPrompt.styleBlock && (
                 <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", flexShrink: 0 }}>
                   <div style={{ padding: "8px 14px", background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
