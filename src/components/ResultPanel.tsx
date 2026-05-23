@@ -3,10 +3,17 @@
 import { useState, useEffect } from "react";
 import { exportTXT } from "@/lib/export";
 
+type ViewMode = "composition" | "suno";
+type SunoPrompt = { styleBlock: string; lyricsBlock: string; updatedAt: number };
+
 interface ResultPanelProps {
   result: string;
   isStreaming: boolean;
   loading?: boolean;
+  sunoPrompt?: SunoPrompt | null;
+  sunoPromptLoading?: boolean;
+  sunoPromptError?: boolean;
+  viewMode?: ViewMode;
 }
 
 function extractSections(text: string) {
@@ -53,6 +60,36 @@ const SECTION_LABELS: Record<string, string> = {
   improv: "Improvisation",
   arrangement: "Arrangement",
 };
+
+function SunoCopyBlock({ label, content, monospace }: { label: string; content: string; monospace?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    try { navigator.clipboard.writeText(content); }
+    catch {
+      const el = document.createElement("textarea");
+      el.value = content; document.body.appendChild(el); el.select();
+      document.execCommand("copy"); document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", marginBottom: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px", background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)" }}>
+        <span style={{ fontSize: "10px", fontWeight: 500, color: "var(--purple)", letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</span>
+        <button onClick={handleCopy} style={{ fontSize: "11px", color: copied ? "var(--purple)" : "#F0EDE6", background: "transparent", border: "1px solid #888578", borderRadius: "4px", padding: "3px 8px", cursor: "pointer" }}>
+          {copied ? "Copied ✓" : "Copy"}
+        </button>
+      </div>
+      <div style={{ padding: "14px", background: "var(--bg-card)" }}>
+        {monospace
+          ? <pre style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.7", whiteSpace: "pre-wrap", fontFamily: "'DM Mono', monospace", margin: 0 }}>{content}</pre>
+          : <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.7", margin: 0 }}>{content}</p>
+        }
+      </div>
+    </div>
+  );
+}
 
 function SectionBlock({
   label,
@@ -195,7 +232,7 @@ function SectionBlock({
   );
 }
 
-export default function ResultPanel({ result, loading, isStreaming }: ResultPanelProps) {
+export default function ResultPanel({ result, loading, isStreaming, sunoPrompt, sunoPromptLoading, sunoPromptError, viewMode = "composition" }: ResultPanelProps) {
   const title = result.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim() || "hiphop-rnb-forge";
   const [refinedSections, setRefinedSections] = useState<Record<string, string>>({});
 
@@ -205,13 +242,47 @@ export default function ResultPanel({ result, loading, isStreaming }: ResultPane
     setRefinedSections(prev => ({ ...prev, [key]: newContent }));
   }
 
-  // Единый корневой контейнер — всегда height:100%, overflow:auto
   const rootStyle: React.CSSProperties = {
     height: "100%",
     overflow: "auto",
     display: "flex",
     flexDirection: "column",
   };
+
+  if (viewMode === "suno") {
+    if (sunoPromptLoading) {
+      return (
+        <div style={rootStyle}>
+          <div style={{ margin: "16px", padding: "32px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", color: "var(--text-muted)", fontSize: "13px" }}>
+              <span style={{ color: "var(--purple)" }}>●</span><span>●</span><span>●</span>
+              <span style={{ marginLeft: "8px" }}>Building Suno prompt...</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (sunoPromptError || !sunoPrompt) {
+      return (
+        <div style={rootStyle}>
+          <div style={{ margin: "16px", padding: "32px", background: "var(--bg-card)", border: "1px solid #7A3030", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", minHeight: "120px" }}>
+            <p style={{ color: "#A05050", fontSize: "13px", fontStyle: "italic" }}>Failed to build Suno prompt — try again.</p>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div style={rootStyle}>
+        <div style={{ padding: "16px" }}>
+          <SunoCopyBlock label="Style of Music" content={sunoPrompt.styleBlock} />
+          {sunoPrompt.lyricsBlock
+            ? <SunoCopyBlock label="Lyrics" content={sunoPrompt.lyricsBlock} monospace />
+            : <div style={{ padding: "12px 14px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "8px", fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic" }}>No lyrics in response.</div>
+          }
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
