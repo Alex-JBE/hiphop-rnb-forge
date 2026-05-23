@@ -287,7 +287,15 @@ export default function Home() {
           notes: "",
         }),
       });
-      if (!res.ok || !res.body) { setLoading(false); setIsStreaming(false); return; }
+      if (!res.ok) {
+        const errText = await res.text().catch(() => `HTTP ${res.status}`);
+        setResult(`Generation failed (${res.status}): ${errText}`);
+        return;
+      }
+      if (!res.body) {
+        setResult("Error: no response body from generation API.");
+        return;
+      }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
@@ -300,6 +308,7 @@ export default function Home() {
       }
     } catch (e) {
       console.error(e);
+      setResult("Error connecting to generation API.");
     } finally { setLoading(false); setIsStreaming(false); }
   }
 
