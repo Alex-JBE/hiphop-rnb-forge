@@ -72,7 +72,12 @@ export default function Header({ title, composition, coverResult, videoResult, v
   }
 
   function handleCopyrightExport() {
-    exportCopyrightPackage(title, authorName, composition, style, language);
+    const comp =
+      composition ||
+      (sunoPrompt
+        ? `STYLE OF MUSIC\n${sunoPrompt.styleBlock}\n\n${sunoPrompt.lyricsBlock || ""}`
+        : "");
+    exportCopyrightPackage(title, authorName, comp, style, language);
     setShowCopyright(false);
   }
 
@@ -117,7 +122,7 @@ export default function Header({ title, composition, coverResult, videoResult, v
               <button onClick={onClear} style={{ padding: "6px 14px", background: "transparent", border: "1px solid #3A3A42", borderRadius: "6px", color: "#888578", fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>
                 New Composition
               </button>
-              {composition && (
+              {hasContent && (
                 <button onClick={() => setShowCopyright(true)} style={{ padding: "6px 14px", background: "#1A1020", border: "1px solid #6D28D9", borderRadius: "6px", color: "#C084FC", fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>
                   Copyright
                 </button>
