@@ -119,7 +119,7 @@ export default function Header({ title, composition, coverResult, videoResult, v
               </button>
               {composition && (
                 <button onClick={() => setShowCopyright(true)} style={{ padding: "6px 14px", background: "#1A1020", border: "1px solid #6D28D9", borderRadius: "6px", color: "#C084FC", fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>
-                  © Copyright
+                  Copyright
                 </button>
               )}
               {(composition || sunoPrompt) && (
@@ -175,7 +175,7 @@ export default function Header({ title, composition, coverResult, videoResult, v
           <div style={{ background: "#141418", border: "1px solid #6D28D9", borderRadius: "12px", width: "100%", maxWidth: "520px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontSize: "14px", color: "#C084FC", fontWeight: 600 }}>© Copyright Package</div>
+                <div style={{ fontSize: "14px", color: "#C084FC", fontWeight: 600 }}>Copyright Package</div>
                 <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>Timestamped authorship document for rights registration</div>
               </div>
               <button onClick={() => setShowCopyright(false)} style={{ background: "transparent", border: "1px solid #3A3A42", borderRadius: "6px", color: "#888578", fontSize: "12px", padding: "4px 10px", cursor: "pointer" }}>✕</button>
