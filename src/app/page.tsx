@@ -171,7 +171,7 @@ export default function Home() {
   const styleBlockRef = useRef<HTMLDivElement>(null);
   const themeTitle = deriveTitleFromTheme(theme);
   const resultTitle = result.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim();
-  const compositionTitle = themeTitle || resultTitle || "";
+  const compositionTitle = resultTitle || themeTitle || "";
   const instrumental = trackMode === "instrumental";
 
   async function buildShortPrompt(): Promise<string> {
