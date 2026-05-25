@@ -85,15 +85,20 @@ COMPOSITION RULES:
 - Do not overfill the square
 
 TYPOGRAPHY RULES:
-- Default: text_on_cover = false
-- If text needed, reserve a clean title zone (top third, bottom strip, left column, upper-right negative space)
-- Never ask image model to generate complex readable type
-- Prioritize text-safe composition over fake AI lettering
+- text_on_cover = true
+- Default: include three typography levels in each prompt:
+  1. TITLE — bold sans-serif, warm amber or clean white, largest; always required
+  2. NARRATIVE TAGLINE — refined sans-serif, same color at 85% opacity, medium size
+  3. GENRE LINE — uppercase with letter-tracking, same color at 70% opacity, smallest
+- All type must sit in text-safe zones with sufficient negative space — never over the focal subject or primary visual
+- Keep type simple and highly legible at thumbnail scale: no decorative lettering, no calligraphic or script fonts, no inline ornamentation
+- Do not ask the image model to generate dense or complex readable text
+- If the composition would become visually overcrowded, simplify: drop Genre line first, then Tagline — Title is always mandatory
 
 CROSS-FORMAT RULES:
-1:1 Streaming Cover — strongest focal composition, safest thumbnail readability, center-weighted or deliberately asymmetric with balance
-16:9 Banner — wider environment storytelling, subject may sit left or right third, preserve central brand legibility
-9:16 Story/Reel — vertical subject priority, avoid critical detail in top and bottom UI zones, use long silhouettes and vertical light shafts
+1:1 Streaming Cover — Title + Tagline in upper third (center-aligned, dark negative space), Genre line at lower edge strip; strongest focal composition, center-weighted or deliberately asymmetric
+16:9 Banner — Title + Tagline in right-center atmospheric zone (no competing visual subject), Genre line at lower edge center or right-aligned; subject sits in left or right third
+9:16 Story/Reel — Title + Tagline in upper quarter (center-aligned, UI-safe, dark sky or mist), Genre line in lower quarter above bottom edge; vertical subject priority, long silhouettes and vertical light shafts
 
 SELF-CRITIQUE — before answering verify:
 - Does the image feel connected to the music?
@@ -108,7 +113,7 @@ If the answer fails two or more checks, simplify and rebuild.
 
 DEFAULT PARAMETERS:
 thumbnail_priority = high
-text_on_cover = false
+text_on_cover = true
 literal_lyric_illustration = low
 composition_complexity = medium
 palette_count = restrained
@@ -122,43 +127,82 @@ export interface CoverArtInput {
   mood: string;
   theme: string;
   composition: string;
+  bpm?: string;
 }
 
 export function buildCoverArtPrompt(input: CoverArtInput): string {
-  const { title, style, mood, theme, composition } = input;
+  const { title, style, mood, theme, composition, bpm } = input;
 
   const trackInfo = composition
     ? `Full composition text:\n${composition}`
     : `Title: ${title}\nStyle: ${style}\nMood: ${mood}\nTheme: ${theme}`;
 
-  return `You are working on the following jazz composition:
+  const titleText = title || "Track Title";
+
+  const genreHint = style
+    .split(/\s*\+\s*/)
+    .slice(0, 3)
+    .map(s => s.trim().toUpperCase())
+    .join(" · ");
+
+  const genreLine = bpm ? `${genreHint} · ${bpm}` : genreHint;
+  const genreLineNote = bpm
+    ? `"${genreLine}" — use exactly as provided`
+    : `"${genreHint}" — omit BPM entirely; do not guess or invent a tempo value`;
+
+  return `You are working on the following music composition:
 
 ${trackInfo}
 
-Based on this composition, generate image prompts for three release formats.
+---
+TYPOGRAPHY VALUES TO EMBED:
+Title: "${titleText}"
+Genre line: ${genreLineNote}
 
-For each format, apply the full art direction workflow:
-1. Extract the emotional core of THIS specific composition
-2. Choose the appropriate visual archetype for jazz genre
-3. Define a precise design language (palette, texture, lighting, finish)
-4. Plan composition with thumbnail readability and text-safe zones
-5. Write a polished, production-ready image generation prompt
+---
+STEP 1 — Decide the narrative tagline (use consistently across all three formats):
+Generate one short 2-part tagline from this composition:
+- Source priority: theme narrative → first lyric lines → dominant atmosphere from STYLE/CORE
+- Format: "Short scene · Emotional impulse" — 2–6 words per part, 12 words max total
+- Examples: "The last set · A musician packs up his life" | "Late-night reflections · Forty years in one case" | "Empty stages · Muted triumph" | "Rhodes piano soul · Walking away with dignity"
+Use this tagline consistently across all three formats. For 9:16 vertical you may shorten slightly if the vertical space is tight — keep both parts and preserve the emotional meaning.
+
+STEP 2 — Generate three format prompts, each embedding all three typography levels:
+
+Typography placement zones:
+- CD_COVER (1:1): Title + Tagline in upper third — dark negative space, center-aligned. Genre line at lower edge — across the ground-level texture, center-aligned.
+- YOUTUBE (16:9): Title + Tagline in right-center atmospheric zone — where no focal subject competes. Genre line at lower edge — center or right-aligned to match the title block.
+- TIKTOK (9:16): Title + Tagline in upper quarter — dark sky or mist, center-aligned for vertical mobile. Genre line in lower quarter — across the reflected-light surface just above bottom edge.
+
+Typography styling for all formats:
+1. Title ("${titleText}") — bold sans-serif, warm amber or clean white, largest text element
+2. Narrative tagline — refined sans-serif, same color at 85% opacity, medium size
+3. Genre line ("${genreLine}") — uppercase with letter-tracking, same color at 70% opacity, smallest
+
+Structure of each format prompt:
+[Atmospheric scene description — 2–4 sentences establishing the visual world, palette, lighting, texture, and composition logic]
+
+[Typography block — describe the text-safe zone naturally as part of the image description. Specify where each level sits, how it looks, and what it says. Use this as a formatting reference: name the zone, note the alignment, describe Title as the largest and boldest element, Tagline as medium and slightly receded, Genre line as small and tracked at the lower position. Write it as art-director language, not as a markdown list.]
+
+[1 sentence closing note on mood, texture finish, or composition unity]
 
 Return ONLY this exact format, nothing else:
 
 CD_COVER:
-[2–4 sentence image generation prompt for square 1:1 CD/album cover — apply full jazz genre visual grammar, one dominant subject, text-safe zone at top or bottom, matte or fine-grain finish, emotionally matched to THIS composition]
+[full prompt as described above for 1:1]
 
 YOUTUBE:
-[2–4 sentence image generation prompt for 16:9 YouTube thumbnail — wider environment storytelling, subject left or right third, central area readable as brand zone, captures the emotional world of THIS piece]
+[full prompt as described above for 16:9]
 
 TIKTOK:
-[2–4 sentence image generation prompt for 9:16 vertical TikTok/Reels cover — vertical subject priority, long silhouette or vertical light shaft composition, avoids critical detail in top and bottom UI zones, mood-matched to THIS piece]
+[full prompt as described above for 9:16]
 
-Rules for each prompt:
-- Reference the specific emotional and sonic identity of THIS composition, not generic jazz
-- Include lighting behavior, color palette, and material texture
-- Include composition logic (foreground/background, focal center, negative space)
-- Avoid cliché AI aesthetics, generic neon effects, crowded club scenes, kitschy saxophone fire visuals
+Rules:
+- Reference the specific emotional and sonic identity of THIS composition
+- Include lighting behavior, color palette, and material texture in the atmospheric section
+- Typography must be legible at thumbnail scale and feel designed in, not pasted over
+- Keep type simple: no decorative lettering, no script fonts, no calligraphy
+- Same tagline across all three formats (slight shortening permitted for 9:16 only)
+- Avoid cliché AI aesthetics, generic neon, crowded club scenes
 - Feel like a real art director brief for a real music release`;
 }

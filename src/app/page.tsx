@@ -407,6 +407,7 @@ export default function Home() {
     flow.viewMode === "suno" ? flow.sunoPromptLoading : isStreaming;
 
   // Style name for hero heading
+  const bpm = tempo.match(/\(([^)]+)\)/)?.[1] ?? "";
   const heroStyle = activeStyles.length === 1 ? activeStyles[0] : activeStyles.slice(0, 2).join(" × ");
   const heroVariant = getVariantForStyle(activeStyles[0]);
 
@@ -436,6 +437,7 @@ export default function Home() {
           theme={theme}
           composition={panelComposition}
           compositionLoading={panelCompositionLoading}
+          bpm={bpm}
           onResult={setCoverResult}
         />
 

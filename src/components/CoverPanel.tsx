@@ -11,6 +11,7 @@ interface CoverPanelProps {
   composition: string;
   compositionLoading: boolean;
   onResult: (result: string) => void;
+  bpm?: string;
 }
 
 const FORMATS = [
@@ -49,7 +50,7 @@ function copyToClipboard(text: string) {
   }
 }
 
-export default function CoverPanel({ title, style, mood, theme, composition, compositionLoading, onResult }: CoverPanelProps) {
+export default function CoverPanel({ title, style, mood, theme, composition, compositionLoading, onResult, bpm }: CoverPanelProps) {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function CoverPanel({ title, style, mood, theme, composition, com
       const res = await fetch("/api/cover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, style, mood, theme, composition }),
+        body: JSON.stringify({ title, style, mood, theme, composition, bpm }),
       });
       if (!res.ok || !res.body) { setLoading(false); return; }
       const reader = res.body.getReader();

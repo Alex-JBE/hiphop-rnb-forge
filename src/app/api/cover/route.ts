@@ -5,9 +5,9 @@ import { COVER_ART_DIRECTOR_SYSTEM, buildCoverArtPrompt } from "@/prompts/cover-
 export async function POST(req: NextRequest) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   try {
-    const { title, style, mood, theme, composition } = await req.json();
+    const { title, style, mood, theme, composition, bpm } = await req.json();
 
-    const userPrompt = buildCoverArtPrompt({ title, style, mood, theme, composition });
+    const userPrompt = buildCoverArtPrompt({ title, style, mood, theme, composition, bpm });
 
     const stream = await anthropic.messages.stream({
       model: "claude-sonnet-4-6",
