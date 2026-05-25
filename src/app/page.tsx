@@ -409,6 +409,14 @@ export default function Home() {
     }
   }
 
+  // Derived source for side-panel generation — Suno mode feeds styleBlock+lyricsBlock
+  const panelComposition =
+    viewMode === "suno" && sunoPrompt
+      ? `${sunoPrompt.styleBlock}\n\n${sunoPrompt.lyricsBlock || ""}`.trim()
+      : result;
+  const panelCompositionLoading =
+    viewMode === "suno" ? sunoPromptLoading : isStreaming;
+
   // Style name for hero heading
   const heroStyle = activeStyles.length === 1 ? activeStyles[0] : activeStyles.slice(0, 2).join(" × ");
   const heroVariant = getVariantForStyle(activeStyles[0]);
@@ -437,8 +445,8 @@ export default function Home() {
           style={activeStyles.join(" + ")}
           mood={INTENSITY_LABELS[intensity]}
           theme={theme}
-          composition={result}
-          compositionLoading={isStreaming}
+          composition={panelComposition}
+          compositionLoading={panelCompositionLoading}
           onResult={setCoverResult}
         />
 
@@ -776,8 +784,8 @@ export default function Home() {
           style={activeStyles.join(" + ")}
           mood={INTENSITY_LABELS[intensity]}
           theme={theme}
-          composition={result}
-          compositionLoading={isStreaming}
+          composition={panelComposition}
+          compositionLoading={panelCompositionLoading}
           onResult={setVideoResult}
         />
       </div>
