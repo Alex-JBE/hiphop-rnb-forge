@@ -9,6 +9,7 @@ import DraftsPanel from "@/components/DraftsPanel";
 import { useDrafts } from "@/lib/useDrafts";
 import { exportTXT } from "@/lib/export";
 import { buildPromptParts } from "@/prompts/base-prompt";
+import useDualPromptFlow from "@/lib/useDualPromptFlow";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
@@ -77,8 +78,6 @@ const VOCAL_STYLES = [
 ];
 
 type TrackMode = "vocal" | "instrumental";
-type ViewMode = "composition" | "suno";
-type SunoPrompt = { title: string; styleBlock: string; lyricsBlock: string; updatedAt: number };
 
 // ─── Style helpers ─────────────────────────────────────────────────────────────
 
@@ -158,17 +157,48 @@ export default function Home() {
   const [inspireLoading, setInspireLoading] = useState(false);
   const [randomLoading, setRandomLoading] = useState(false);
   const [resetKey, setResetKey] = useState(0);
-  const [viewMode, setViewMode] = useState<ViewMode>("composition");
-  const [sunoPrompt, setSunoPrompt] = useState<SunoPrompt | null>(null);
-  const [sunoPromptLoading, setSunoPromptLoading] = useState(false);
-  const [sunoPromptError, setSunoPromptError] = useState(false);
-
   const { drafts, saveDraft, deleteDraft, toggleStar } = useDrafts();
   const styleBlockRef = useRef<HTMLDivElement>(null);
   const themeTitle = deriveTitleFromTheme(theme);
   const resultTitle = result.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim();
   const compositionTitle = themeTitle || resultTitle || "";
   const instrumental = trackMode === "instrumental";
+
+  async function buildShortPrompt(): Promise<string> {
+    if (!result && !theme && !activeStyles.length) throw new Error("NO_INPUT");
+    const brief = result || [
+      `Hip-hop & R&B track in ${activeStyles.join(" + ")} style`,
+      `Key: ${key}`,
+      `Tempo: ${tempo}`,
+      `Intensity: ${INTENSITY_LABELS[intensity]}`,
+      `Instruments: ${instruments.join(", ")}`,
+      language !== "English" ? `Language: ${language}` : null,
+      theme ? `Theme: ${theme}` : null,
+    ].filter(Boolean).join(". ");
+    const res = await fetch("/api/suno", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        composition: brief,
+        title: compositionTitle || "Hip-Hop Track",
+        trackLength: "medium",
+        vocal: trackMode === "vocal" ? vocalStyle : "",
+      }),
+    });
+    if (!res.ok || !res.body) throw new Error("SUNO_API_ERROR");
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let acc = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      acc += decoder.decode(value, { stream: true });
+    }
+    return acc;
+  }
+
+  const fingerprint = `${activeStyles.join("+")}|${key}|${tempo}|${intensity}|${trackMode}|${vocalStyle}|${language}|${instruments.join(",")}|${theme}`;
+  const flow = useDualPromptFlow({ fingerprint, fullResult: result, buildShortPrompt });
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -188,7 +218,7 @@ export default function Home() {
     setTrackMode("vocal"); setVocalStyle("Rapping");
     setCombos([]); setCombosForStyle(""); setOpenCat(null);
     setResetKey(k => k + 1);
-    setViewMode("composition"); setSunoPrompt(null); setSunoPromptError(false);
+    flow.resetFlow();
   }
 
   function randomizeAll() {
@@ -291,9 +321,10 @@ export default function Home() {
   }
 
   async function generate() {
+    const inputFingerprint = fingerprint;
     setLoading(true); setIsStreaming(true);
     setResult(""); setCoverResult(""); setVideoResult("");
-    setViewMode("composition");
+    flow.onForgeStart();
     try {
       const { system, user } = buildPromptParts({
         branch: activeStyles.join(" + "),
@@ -329,93 +360,21 @@ export default function Home() {
         acc += decoder.decode(value, { stream: true });
         setResult(acc);
       }
+      flow.onForgeComplete(inputFingerprint);
     } catch (e) {
       console.error(e);
       setResult("Error connecting to generation API.");
     } finally { setLoading(false); setIsStreaming(false); }
   }
 
-  async function buildSunoPrompt() {
-    if (!result && !theme && !activeStyles.length) {
-      setSunoPromptError(true);
-      setViewMode("composition");
-      return;
-    }
+  function buildSunoPrompt() { flow.buildSunoPrompt(); }
 
-    setSunoPromptLoading(true);
-    setSunoPrompt(null);
-    setSunoPromptError(false);
-    setViewMode("suno");
-
-    try {
-      const brief = result || [
-        `Hip-hop & R&B track in ${activeStyles.join(" + ")} style`,
-        `Key: ${key}`,
-        `Tempo: ${tempo}`,
-        `Intensity: ${INTENSITY_LABELS[intensity]}`,
-        `Instruments: ${instruments.join(", ")}`,
-        language !== "English" ? `Language: ${language}` : null,
-        theme ? `Theme: ${theme}` : null,
-      ].filter(Boolean).join(". ");
-
-      const res = await fetch("/api/suno", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          composition: brief,
-          title: compositionTitle || "Hip-Hop Track",
-          trackLength: "medium",
-          vocal: trackMode === "vocal" ? vocalStyle : "",
-        }),
-      });
-
-      if (!res.ok || !res.body) {
-        setSunoPromptError(true);
-        return;
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let acc = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        acc += decoder.decode(value, { stream: true });
-      }
-
-      const styleBlockMatch = acc.match(/STYLE_OF_MUSIC:\s*([\s\S]*?)(?=LYRICS:|$)/);
-      const lyricsBlockMatch = acc.match(/LYRICS:\s*([\s\S]*?)$/);
-
-      const styleBlock = styleBlockMatch?.[1]?.trim() ?? "";
-      const lyricsBlock = lyricsBlockMatch?.[1]?.trim() ?? "";
-
-      if (!styleBlock) {
-        setSunoPromptError(true);
-        return;
-      }
-
-      setSunoPrompt({
-        title: compositionTitle,
-        styleBlock,
-        lyricsBlock,
-        updatedAt: Date.now(),
-      });
-    } catch (e) {
-      console.error("Suno build failed", e);
-      setSunoPromptError(true);
-    } finally {
-      setSunoPromptLoading(false);
-    }
-  }
-
-  // Derived source for side-panel generation — Suno mode feeds styleBlock+lyricsBlock
   const panelComposition =
-    viewMode === "suno" && sunoPrompt
-      ? `${sunoPrompt.styleBlock}\n\n${sunoPrompt.lyricsBlock || ""}`.trim()
+    flow.viewMode === "suno"
+      ? [flow.sunoPrompt?.styleBlock, flow.sunoPrompt?.lyricsBlock].filter(Boolean).join("\n\n").trim()
       : result;
   const panelCompositionLoading =
-    viewMode === "suno" ? sunoPromptLoading : isStreaming;
+    flow.viewMode === "suno" ? flow.sunoPromptLoading : isStreaming;
 
   // Style name for hero heading
   const heroStyle = activeStyles.length === 1 ? activeStyles[0] : activeStyles.slice(0, 2).join(" × ");
@@ -432,8 +391,8 @@ export default function Home() {
         style={activeStyles.join(" + ")}
         language={language}
         onClear={clearAll}
-        sunoPrompt={sunoPrompt}
-        viewMode={viewMode}
+        sunoPrompt={flow.sunoPrompt}
+        viewMode={flow.viewMode}
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr 1fr", flex: 1, overflow: "hidden" }}>
@@ -720,10 +679,10 @@ export default function Home() {
               result={result}
               loading={loading}
               isStreaming={isStreaming}
-              sunoPrompt={sunoPrompt}
-              sunoPromptLoading={sunoPromptLoading}
-              sunoPromptError={sunoPromptError}
-              viewMode={viewMode}
+              sunoPrompt={flow.sunoPrompt}
+              sunoPromptLoading={flow.sunoPromptLoading}
+              sunoPromptError={flow.sunoPromptError}
+              viewMode={flow.viewMode}
             />
           </div>
 
@@ -733,21 +692,21 @@ export default function Home() {
               onClick={() => {
                 if (result) {
                   saveDraft({ title: compositionTitle, styles: activeStyles, outputType: vocalStyle, result, key, tempo, intensity, language, trackMode, instruments, mood: INTENSITY_LABELS[intensity], theme });
-                } else if (sunoPrompt) {
-                  const sunoText = [sunoPrompt.styleBlock, sunoPrompt.lyricsBlock].filter(Boolean).join("\n\n").trim();
+                } else if (flow.sunoPrompt) {
+                  const sunoText = [flow.sunoPrompt.styleBlock, flow.sunoPrompt.lyricsBlock].filter(Boolean).join("\n\n").trim();
                   saveDraft({ title: compositionTitle, styles: activeStyles, outputType: "suno", result: sunoText, key, tempo, intensity, language, trackMode, instruments, mood: INTENSITY_LABELS[intensity], theme });
                 }
               }}
-              disabled={(!result && !sunoPrompt) || !compositionTitle.trim()}
+              disabled={(!result && !flow.sunoPrompt) || !compositionTitle.trim()}
               title="Save to history"
               style={{
                 padding: "10px 12px",
-                background: (result || sunoPrompt) ? "#2A1E06" : "transparent",
-                border: `1px solid ${(result || sunoPrompt) ? "#D4A840" : "#2A2A30"}`,
-                boxShadow: (result || sunoPrompt) ? "0 0 0 1px #D4A840" : "none",
+                background: (result || flow.sunoPrompt) ? "#2A1E06" : "transparent",
+                border: `1px solid ${(result || flow.sunoPrompt) ? "#D4A840" : "#2A2A30"}`,
+                boxShadow: (result || flow.sunoPrompt) ? "0 0 0 1px #D4A840" : "none",
                 borderRadius: "6px",
-                color: (result || sunoPrompt) ? "#E8C060" : "#3A3830",
-                fontSize: "12px", cursor: (result || sunoPrompt) ? "pointer" : "not-allowed",
+                color: (result || flow.sunoPrompt) ? "#E8C060" : "#3A3830",
+                fontSize: "12px", cursor: (result || flow.sunoPrompt) ? "pointer" : "not-allowed",
                 letterSpacing: "0.04em", whiteSpace: "nowrap" as const,
                 transition: "all 0.2s",
               }}
@@ -756,20 +715,20 @@ export default function Home() {
             </button>
             <button
               onClick={buildSunoPrompt}
-              disabled={sunoPromptLoading}
+              disabled={flow.sunoPromptLoading}
               style={{
                 padding: "10px 14px",
-                background: sunoPromptLoading ? "#1A1A1F" : sunoPromptError ? "#1A0808" : sunoPrompt ? "#0A1020" : "#1A1020",
-                border: `1px solid ${sunoPromptLoading ? "#2A2A30" : sunoPromptError ? "#7A3030" : sunoPrompt ? "#6D28D9" : "#A855F7"}`,
+                background: flow.sunoPromptLoading ? "#1A1A1F" : flow.sunoPromptError ? "#1A0808" : flow.sunoPrompt ? "#0A1020" : "#1A1020",
+                border: `1px solid ${flow.sunoPromptLoading ? "#2A2A30" : flow.sunoPromptError ? "#7A3030" : flow.sunoPrompt ? "#6D28D9" : "#A855F7"}`,
                 borderRadius: "6px",
-                color: sunoPromptLoading ? "#4A4840" : sunoPromptError ? "#A05050" : sunoPrompt ? "#A855F7" : "#A855F7",
+                color: flow.sunoPromptLoading ? "#4A4840" : flow.sunoPromptError ? "#A05050" : flow.sunoPrompt ? "#A855F7" : "#A855F7",
                 fontSize: "12px", fontWeight: 500,
-                cursor: sunoPromptLoading ? "not-allowed" : "pointer",
+                cursor: flow.sunoPromptLoading ? "not-allowed" : "pointer",
                 letterSpacing: "0.04em", fontFamily: "'DM Sans', sans-serif",
                 transition: "all 0.2s", whiteSpace: "nowrap" as const,
               }}
             >
-              {sunoPromptLoading ? "Building..." : sunoPromptError ? "Suno Build Failed ✗" : sunoPrompt ? "Suno Prompt Ready ✓" : "Build Suno Prompt"}
+              {flow.sunoPromptLoading ? "Building..." : flow.sunoPromptError ? "Suno Build Failed ✗" : flow.sunoPrompt ? "Suno Prompt Ready ✓" : "Build Suno Prompt"}
             </button>
             <button onClick={generate} disabled={loading || isStreaming} style={{ flex: 1, padding: "10px", background: loading || isStreaming ? "#1A1020" : "#A855F7", border: "none", borderRadius: "6px", color: loading || isStreaming ? "#8C829D" : "#0D0D0F", fontSize: "13px", fontWeight: 600, cursor: loading || isStreaming ? "not-allowed" : "pointer", letterSpacing: "0.04em", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s", whiteSpace: "nowrap" as const }}>
               {loading || isStreaming ? "Generating..." : "Forge Track ↗"}
