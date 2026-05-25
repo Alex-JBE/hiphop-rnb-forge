@@ -110,6 +110,16 @@ const s = {
   }),
 };
 
+function isValidTitle(t: string): boolean {
+  const words = t.trim().split(/\s+/);
+  if (words.length < 2 || words.length > 6) return false;
+  if (/^(A|An|The)\s/i.test(t)) return false;
+  if (/\s-\s/.test(t)) return false;
+  if (/^(TITLE:|Track:|Song:)/i.test(t)) return false;
+  const last = words[words.length - 1].toLowerCase();
+  return !["a", "an", "the", "in", "of", "at", "on", "to", "for", "with", "by"].includes(last);
+}
+
 function getVariantForStyle(st: string): "purple" | "amber" {
   const cat = STYLE_CATEGORIES.find(c => c.label === st || c.subs.includes(st));
   return cat?.variant ?? "purple";
@@ -367,7 +377,27 @@ export default function Home() {
     } finally { setLoading(false); setIsStreaming(false); }
   }
 
-  function buildSunoPrompt() { flow.buildSunoPrompt(); }
+  async function buildSunoPrompt() {
+    let titleOverride: string | undefined;
+    try {
+      const res = await fetch("/api/title", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme,
+          styles: activeStyles,
+          key,
+          mood: INTENSITY_LABELS[intensity],
+          result: result.slice(0, 500),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (isValidTitle(data.title)) titleOverride = data.title.trim();
+      }
+    } catch {}
+    flow.buildSunoPrompt(titleOverride);
+  }
 
   const panelComposition =
     flow.viewMode === "suno"

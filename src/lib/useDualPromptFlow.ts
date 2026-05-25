@@ -23,7 +23,7 @@ export interface DualPromptFlow {
   sunoPromptError: boolean;
   sunoPromptDirty: boolean;
   fullCompositionDirty: boolean;
-  buildSunoPrompt: () => Promise<void>;
+  buildSunoPrompt: (overrideTitle?: string) => Promise<void>;
   resetFlow: () => void;
   onForgeStart: () => void;
   onForgeComplete: (fp: string) => void;
@@ -49,7 +49,7 @@ export default function useDualPromptFlow({ fingerprint, fullResult, composition
   const fullCompositionDirty = lastForgeFingerprint !== "" && fingerprint !== lastForgeFingerprint;
   const sunoPromptDirty = sunoPrompt !== null && fingerprint !== lastSunoFingerprint;
 
-  const buildSunoPrompt = useCallback(async () => {
+  const buildSunoPrompt = useCallback(async (overrideTitle?: string) => {
     const capturedFp = fingerprintRef.current;
 
     setSunoPromptLoading(true);
@@ -65,7 +65,7 @@ export default function useDualPromptFlow({ fingerprint, fullResult, composition
 
       if (!styleBlock) { setSunoPromptError(true); return; }
 
-      const title = compositionTitleRef.current;
+      const title = overrideTitle ?? compositionTitleRef.current;
 
       setLastSunoFingerprint(capturedFp);
       setSunoPrompt({ title, styleBlock, lyricsBlock, updatedAt: Date.now() });
