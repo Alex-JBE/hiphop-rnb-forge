@@ -198,7 +198,7 @@ export default function Home() {
   }
 
   const fingerprint = `${activeStyles.join("+")}|${key}|${tempo}|${intensity}|${trackMode}|${vocalStyle}|${language}|${instruments.join(",")}|${theme}`;
-  const flow = useDualPromptFlow({ fingerprint, fullResult: result, buildShortPrompt });
+  const flow = useDualPromptFlow({ fingerprint, fullResult: result, compositionTitle, buildShortPrompt });
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

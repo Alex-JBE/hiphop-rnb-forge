@@ -12,6 +12,7 @@ export type SunoPrompt = {
 interface Opts {
   fingerprint: string;
   fullResult: string;
+  compositionTitle: string;
   buildShortPrompt: () => Promise<string>;
 }
 
@@ -28,7 +29,7 @@ export interface DualPromptFlow {
   onForgeComplete: (fp: string) => void;
 }
 
-export default function useDualPromptFlow({ fingerprint, fullResult, buildShortPrompt }: Opts): DualPromptFlow {
+export default function useDualPromptFlow({ fingerprint, fullResult, compositionTitle, buildShortPrompt }: Opts): DualPromptFlow {
   const [viewMode, setViewMode] = useState<ViewMode>("composition");
   const [sunoPrompt, setSunoPrompt] = useState<SunoPrompt | null>(null);
   const [sunoPromptLoading, setSunoPromptLoading] = useState(false);
@@ -38,9 +39,11 @@ export default function useDualPromptFlow({ fingerprint, fullResult, buildShortP
 
   const fingerprintRef = useRef(fingerprint);
   const fullResultRef = useRef(fullResult);
+  const compositionTitleRef = useRef(compositionTitle);
   const buildShortPromptRef = useRef(buildShortPrompt);
   fingerprintRef.current = fingerprint;
   fullResultRef.current = fullResult;
+  compositionTitleRef.current = compositionTitle;
   buildShortPromptRef.current = buildShortPrompt;
 
   const fullCompositionDirty = lastForgeFingerprint !== "" && fingerprint !== lastForgeFingerprint;
@@ -48,7 +51,6 @@ export default function useDualPromptFlow({ fingerprint, fullResult, buildShortP
 
   const buildSunoPrompt = useCallback(async () => {
     const capturedFp = fingerprintRef.current;
-    const capturedFr = fullResultRef.current;
 
     setSunoPromptLoading(true);
     setSunoPrompt(null);
@@ -63,9 +65,7 @@ export default function useDualPromptFlow({ fingerprint, fullResult, buildShortP
 
       if (!styleBlock) { setSunoPromptError(true); return; }
 
-      const title = capturedFr.split("\n")
-        .find(l => /^#?\s*TITLE:/i.test(l))
-        ?.replace(/^#?\s*TITLE:/i, "").trim() ?? "";
+      const title = compositionTitleRef.current;
 
       setLastSunoFingerprint(capturedFp);
       setSunoPrompt({ title, styleBlock, lyricsBlock, updatedAt: Date.now() });

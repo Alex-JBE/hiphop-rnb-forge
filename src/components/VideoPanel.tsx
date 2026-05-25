@@ -97,15 +97,23 @@ export default function VideoPanel({ title, style, mood, theme, composition, com
     }
   }
 
+  function copyText(text: string) {
+    try { navigator.clipboard.writeText(text); }
+    catch {
+      const el = document.createElement("textarea");
+      el.value = text; document.body.appendChild(el); el.select();
+      document.execCommand("copy"); document.body.removeChild(el);
+    }
+  }
+
   function copy(text: string, key: string) {
-    navigator.clipboard.writeText(text);
+    copyText(text);
     setCopied(key);
     setTimeout(() => setCopied(null), 1500);
   }
 
   function copyAll() {
-    const text = clips.map((c) => `CLIP ${c.id}:\n${c.prompt}`).join("\n\n");
-    navigator.clipboard.writeText(text);
+    copyText(clips.map((c) => `CLIP ${c.id}:\n${c.prompt}`).join("\n\n"));
     setCopied("all");
     setTimeout(() => setCopied(null), 1500);
   }
