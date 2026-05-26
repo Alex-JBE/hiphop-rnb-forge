@@ -170,8 +170,8 @@ export default function Home() {
   const { drafts, saveDraft, deleteDraft, toggleStar } = useDrafts();
   const styleBlockRef = useRef<HTMLDivElement>(null);
   const themeTitle = deriveTitleFromTheme(theme);
-  const resultTitle = result.split("\n").find(l => /^#?\s*TITLE:/i.test(l))?.replace(/^#?\s*TITLE:/i, "").trim();
-  const compositionTitle = resultTitle || themeTitle || "";
+  const resultTitle = result.split("\n").map(l => l.match(/^[#*\s]*TITLE[#*\s]*:[*\s]*([^*\n]+)/i)?.[1]?.trim()).find(Boolean);
+  let compositionTitle = resultTitle || themeTitle || "";
   const instrumental = trackMode === "instrumental";
 
   async function buildShortPrompt(): Promise<string> {
@@ -209,6 +209,7 @@ export default function Home() {
 
   const fingerprint = `${activeStyles.join("+")}|${key}|${tempo}|${intensity}|${trackMode}|${vocalStyle}|${language}|${instruments.join(",")}|${theme}`;
   const flow = useDualPromptFlow({ fingerprint, fullResult: result, compositionTitle, buildShortPrompt });
+  compositionTitle = resultTitle || flow.sunoPrompt?.title || themeTitle || "";
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
